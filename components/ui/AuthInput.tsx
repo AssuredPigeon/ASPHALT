@@ -1,19 +1,20 @@
 import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, TextInput, View } from 'react-native';
 
+import { TextInputProps } from 'react-native';
+
 type Props = {
   icon: keyof typeof Ionicons.glyphMap;
-  placeholder: string;
-};
+} & TextInputProps;
 
-export default function AuthInput({ icon, placeholder }: Props) {
+export default function AuthInput({ icon, ...inputProps }: Props) {
   return (
     <View style={styles.container}>
       <Ionicons name={icon} size={18} color="#9CA3AF" />
       <TextInput
-        placeholder={placeholder}
         placeholderTextColor="#9CA3AF"
         style={styles.input}
+        {...inputProps}
       />
     </View>
   );

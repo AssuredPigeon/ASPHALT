@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router';
-{/* Navegador tipo pila */}
+//{/* Navegador tipo pila */}
 
-{/* Envuelve y permite la navegación entre los archivos de la misma carpeta */}
+//{/* Envuelve y permite la navegación entre los archivos de la misma carpeta */}
 export default function AuthLayout() {
   return (
     <Stack screenOptions={{ headerShown: false, animation: 'fade', animationDuration: 150, }}>
