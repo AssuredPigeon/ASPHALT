@@ -1,8 +1,23 @@
+import { useRouter } from 'expo-router';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
-export default function GuestButton() {
+type Props = {
+  onPress?: () => void;
+};
+
+export default function GuestButton({ onPress }: Props) {
+  const router = useRouter();
+
+  const handlePress = () => {
+    if (onPress) {
+      onPress();
+    } else {
+      router.replace('/(tabs)');
+    }
+  };
+
   return (
-    <Pressable style={styles.button}>
+    <Pressable style={styles.button} onPress={handlePress}>
       <View style={styles.content}>
         <Image
           source={require('../../assets/icons/user.png')}

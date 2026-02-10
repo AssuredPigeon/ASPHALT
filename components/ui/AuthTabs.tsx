@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-{/* Pressable: manejo de estados (lo mejorcito) */}
+//{/* Pressable: manejo de estados (lo mejorcito) */}
 type Props = {
   active: 'login' | 'register';
   onLoginPress?: () => void;
