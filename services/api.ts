@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://DireccionIPLocal:3000',
+  baseURL: 'http://DirecciónIP:3000',
   headers: {
     'Content-Type': 'application/json',
   },
