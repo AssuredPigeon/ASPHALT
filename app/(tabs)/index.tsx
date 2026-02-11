@@ -4,6 +4,7 @@ import { LayoutAnimation, Platform, UIManager, View } from 'react-native';
 import AsphaltMap from '@/components/map/AsphaltMap';
 import BottomActions from '@/components/map/BottomActions';
 import SearchBar from '@/components/map/SearchBar';
+import { SensorModule } from '@/components/SensorModule';
 
 export default function HomeScreen() {
   const [searchActive, setSearchActive] = useState(false);
@@ -27,8 +28,13 @@ export default function HomeScreen() {
   return (
     <View style={{ flex: 1 }}>
       <AsphaltMap />
+
+      <View style={{ position: 'absolute', top: 120, left: 20, right: 20, zIndex: 10 }}>
+        <SensorModule />
+      </View>
+
       <SearchBar onActivate={activateSearch} />
+      
       {searchActive && <BottomActions onClose={deactivateSearch} />}
     </View>
-  );
-}
+  );}
