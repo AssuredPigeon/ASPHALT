@@ -5,12 +5,18 @@ import { StyleSheet, Text, View } from 'react-native';
 
 // CLASE KALMAN PARA SUAVIZAR EL ACELEROMETRO
 class KalmanFilter {
+  private Q: number;
+  private R: number;
+  private P: number;
+  private X: number;
+
   constructor(processNoise = 0.1, measurementNoise = 0.1, estimatedError = 0.1) {
     this.Q = processNoise;
     this.R = measurementNoise;
     this.P = estimatedError;
     this.X = 0; 
   }
+
   filter(measurement: number) 
   // Prediccion y correccion del error
   {
@@ -21,37 +27,23 @@ class KalmanFilter {
     return this.X;
   }
 }
+
 // Instancia global del filtro para mantener el estado entre renders
 const kalman = new KalmanFilter(0.01, 0.1);
 
-export function SensorModule() {
+interface SensorProps {
+  location: Location.LocationObject | null;
+}
+
+export function SensorModule({ location }: SensorProps) {
   const [{ x, y, z }, setData] = useState({ x: 0, y: 0, z: 0 });
   const [fuerzaSuavizada, setFuerzaSuavizada] = useState(1.0);
   const [subscription, setSubscription] = useState<any>(null);
-  const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [velocidad, setVelocidad] = useState(0);
   const [mensaje, setMensaje] = useState("Escaneando camino...");
   const [severidad, setSeveridad] = useState("Ninguna");
 // Timer para borrar la alerta despues de unos segundos
-  const resetTimer = useRef<NodeJS.Timeout | null>(null);
-
-// Gestion del GPS
-  useEffect(() => {
-    (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') return;
-      await Location.watchPositionAsync(
-        { accuracy: Location.Accuracy.High, timeInterval: 1000, distanceInterval: 10 },
-        (loc) =>  {
-            setLocation(loc);
-            let speedKmh = (loc.coords.speed || 0) * 3.6; // Conversion: m/s * 3.6 = km/h
-            // "zona muerta" ignoramos movimientos menores a 2km/h (ruido de GPS parado)
-            if (speedKmh < 2.0) speedKmh = 0;
-            setVelocidad(speedKmh);
-        }
-      );
-    })();
-  }, []);
+  const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 // Gestion del acelerometro 
   const _subscribe = () => {
@@ -77,7 +69,7 @@ export function SensorModule() {
     const UMBRAL_SEVERO = 2.0;
 
     // Quitar "|| true" cuando se quiera probrrar en un carro real
-    const enMovimiento = velocidad > 5 || true; 
+    const enMovimiento = velocidad > 5; 
 
     if (enMovimiento) {
         if (fuerza > UMBRAL_LEVE) {
@@ -120,7 +112,7 @@ export function SensorModule() {
     _subscribe();
     Accelerometer.setUpdateInterval(100);
     return () => _unsubscribe();
-  }, [velocidad, severidad]);
+  }, []);
 
   return (
     <View style={styles.container}>

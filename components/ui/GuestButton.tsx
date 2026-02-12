@@ -6,13 +6,13 @@ type Props = {
 };
 
 export default function GuestButton({ onPress }: Props) {
-  const router = useRouter();
+  const router = useRouter(); // Hook
 
   const handlePress = () => {
     if (onPress) {
-      onPress();
+      onPress(); // Ejecuta
     } else {
-      router.replace('/(tabs)');
+      router.replace('/(tabs)'); // Navega
     }
   };
 
