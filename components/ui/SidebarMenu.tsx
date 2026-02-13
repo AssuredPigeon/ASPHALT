@@ -19,7 +19,7 @@ export default function SidebarMenu() {
         <View style={styles.divider} />
 
         <View>
-          <Pressable style={styles.menuItem} onPress={() => router.push("/")}>
+          <Pressable style={styles.menuItem} onPress={() => router.navigate("/SettingsScreen")}>
             <Ionicons name="settings-outline" size={20} color="white" />
             <Text style={styles.option}>Ajustes</Text>
           </Pressable>
