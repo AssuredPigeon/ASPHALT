@@ -4,9 +4,10 @@ import AuthInput from '@/components/ui/AuthInput';
 import AuthTabs from '@/components/ui/AuthTabs';
 import SocialAuth from '@/components/ui/SocialAuth';
 import api from '@/services/api';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Image, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, StyleSheet, Text, View, Pressable } from 'react-native';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -14,6 +15,7 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleRegister = async () => {
     if (!email || !password) {
@@ -89,13 +91,30 @@ export default function RegisterScreen() {
           keyboardType="email-address"
         />
 
-        <AuthInput
-          icon="lock-closed-outline"
-          placeholder="Contraseña"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
+        <View style={{ position: 'relative' }}>
+          <AuthInput
+            icon="lock-closed-outline"
+            placeholder="Contraseña"
+            secureTextEntry={!showPassword}
+            value={password}
+            onChangeText={setPassword}
+          />
+
+          <Pressable
+            onPress={() => setShowPassword(!showPassword)}
+            style={{
+              position: 'absolute',
+              right: 15,
+              top: 18,
+            }}
+          >
+            <Ionicons
+              name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+              size={20}
+              color="#64748B"
+            />
+          </Pressable>
+        </View>
 
         <AuthButton
           label={loading ? 'Registrando...' : 'Regístrate'}

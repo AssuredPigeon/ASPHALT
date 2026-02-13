@@ -1,10 +1,8 @@
-const mysql = require('mysql2');
+const { Pool } = require('pg');
 
-const pool = mysql.createPool({
-  host: 'localhost',
-  user: 'root',
-  password: '',
-  database: 'asphalt_base',
+const pool = new Pool({
+  connectionString: 'postgresql://postgres.zcjaxotvenizoloshlpn:luX3EANvKFY3jMkI@aws-1-us-east-2.pooler.supabase.com:5432/postgres',
+  ssl: { rejectUnauthorized: false },
 });
 
-module.exports = pool.promise();
+module.exports = pool;

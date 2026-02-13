@@ -4,9 +4,11 @@ import AuthInput from '@/components/ui/AuthInput';
 import AuthTabs from '@/components/ui/AuthTabs';
 import GuestButton from '@/components/ui/GuestButton';
 import api from '@/services/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Image, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Alert, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -14,6 +16,8 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -39,6 +43,14 @@ export default function LoginScreen() {
         email,
         password,
       });
+
+      console.log("LOGIN RESPONSE:", res.data);
+
+      const token = res?.data?.token;
+
+      if (rememberMe && token) {
+        await AsyncStorage.setItem('userToken', token);
+      }
 
       console.log('Usuario:', res.data);
 
@@ -83,22 +95,57 @@ export default function LoginScreen() {
           keyboardType="email-address"
         />
 
-        <AuthInput
-          icon="lock-closed-outline"
-          placeholder="Contraseña"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
+        <View style={{ position: 'relative' }}>
+          <AuthInput
+            icon="lock-closed-outline"
+            placeholder="Contraseña"
+            secureTextEntry={!showPassword}
+            value={password}
+            onChangeText={setPassword}
+          />
+
+          <Pressable
+            onPress={() => setShowPassword(!showPassword)}
+            style={{
+              position: 'absolute',
+              right: 15,
+              top: 18,
+            }}
+          >
+            <Ionicons
+              name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+              size={20}
+              color="#64748B"
+            />
+          </Pressable>
+
+        </View>
+
+        <Pressable
+          onPress={() => setRememberMe(!rememberMe)}
+          style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}
+        >
+          <Ionicons
+            name={rememberMe ? 'checkbox' : 'square-outline'}
+            size={20}
+            color={rememberMe ? '#1E5EFF' : '#64748B'}
+          />
+
+          <Text style={{ marginLeft: 8, fontSize: 13, color: '#334155' }}>
+            Recuérdame
+          </Text>
+        </Pressable>
 
         <AuthButton
           label={loading ? 'Ingresando...' : 'Inicia Sesión'}
           onPress={handleLogin}
         />
 
-        <Text style={styles.helper}>
-          ¿Has olvidado tu contraseña?
-        </Text>
+        <Pressable onPress={() => router.push('/recoverPassword')}>
+          <Text style={[styles.helper]}>
+            ¿Has olvidado tu contraseña?
+          </Text>
+        </Pressable>
 
         <GuestButton />
       </View>
