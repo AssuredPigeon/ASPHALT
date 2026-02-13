@@ -3,6 +3,8 @@ import { StyleSheet, TextInput, View } from 'react-native';
 
 import { TextInputProps } from 'react-native';
 
+{/* Icon: nombre del ícono de Ionicons
+  hereda todas las props normales de TextInput */}
 type Props = {
   icon: keyof typeof Ionicons.glyphMap;
 } & TextInputProps;
@@ -32,7 +34,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   input: {
-    flex: 1,
+    flex: 1, // Ocipa todo el espacio restante
     marginLeft: 10,
     fontSize: 14,
   },

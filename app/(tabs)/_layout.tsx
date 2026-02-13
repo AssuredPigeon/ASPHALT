@@ -6,7 +6,12 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#2f5b9d',
+        tabBarActiveTintColor: '#7FA3E2',
+        tabBarStyle: {
+          backgroundColor: '#0f172a', 
+          borderTopWidth: 0, // Quita la línea gris
+          elevation:0, // Quita la sombra en Android
+        },
       }}
     >
       <Tabs.Screen
