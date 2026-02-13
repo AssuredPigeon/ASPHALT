@@ -2,8 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { LocationObject } from 'expo-location';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
-import MapView, { UrlTile } from 'react-native-maps';
-
+import MapView, { Region, UrlTile } from 'react-native-maps';
 
 interface Props {
   location: LocationObject | null;
@@ -13,33 +12,41 @@ export default function AsphaltMap({ location }: Props) {
   const mapRef = useRef<MapView>(null);
   const [followUser, setFollowUser] = useState(true);
 
-  // Cuando cambia la ubicación
-  useEffect(() => {
-    if (location && followUser) {
-      mapRef.current?.animateToRegion({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
-      });
-    }
-  }, [location, followUser]);
+  // Calcula el delta según velocidad (zoom dinámico)
+  const getRegion = (location: LocationObject): Region => {
+    const speed = location.coords.speed ?? 0; // en m/s
 
-  const goToUser = () => {
-    if (!location) return;
+    let delta = 0.005; // muy cerca (ciudad, detenido)
 
-    setFollowUser(true);
+    if (speed > 25) delta = 0.02;    // carretera alta velocidad
+    else if (speed > 15) delta = 0.01; // velocidad media
+    else delta = 0.005;               // muy cerca
 
-    mapRef.current?.animateToRegion({
+    return {
       latitude: location.coords.latitude,
       longitude: location.coords.longitude,
-      latitudeDelta: 0.01,
-      longitudeDelta: 0.01,
-    });
+      latitudeDelta: delta,
+      longitudeDelta: delta,
+    };
   };
 
-  const handleRegionChange = () => {
-    // Si el usuario mueve el mapa manualmente → deja de seguir
+  // Seguimiento real tipo navegación
+  useEffect(() => {
+    if (!location || !followUser) return;
+
+    const region = getRegion(location);
+
+    mapRef.current?.animateToRegion(region, 400); // animación suave
+  }, [location, followUser]);
+
+  // Botón para volver a centrar
+  const goToUser = () => {
+    if (!location) return;
+    setFollowUser(true);
+  };
+
+  // Si el usuario mueve el mapa, se desactiva el seguimiento
+  const handleUserPan = () => {
     setFollowUser(false);
   };
 
@@ -49,13 +56,12 @@ export default function AsphaltMap({ location }: Props) {
         ref={mapRef}
         style={StyleSheet.absoluteFillObject}
         showsUserLocation
-        onPanDrag={handleRegionChange}
-        initialRegion={{
-          latitude: 20.6597,
-          longitude: -103.3496,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        }}
+        showsMyLocationButton={false}
+        rotateEnabled
+        pitchEnabled
+        onPanDrag={handleUserPan}
+        userLocationPriority="high"
+        followsUserLocation={false} // control manual
       >
         <UrlTile
           urlTemplate="https://a.tile.openstreetmap.org/alidade_dark/{z}/{x}/{y}.png"
@@ -63,21 +69,29 @@ export default function AsphaltMap({ location }: Props) {
         />
       </MapView>
 
-      {/* Botón tipo Google Maps */}
+      {/* Botón estilo Google Maps */}
       <Pressable
         onPress={goToUser}
-        style={{
-          position: 'absolute',
-          bottom: 140,
-          right: 20,
-          backgroundColor: 'white',
-          padding: 14,
-          borderRadius: 30,
-          elevation: 5,
-        }}
+        style={styles.gpsButton}
       >
-        <MaterialIcons name="gps-fixed" size={24} color="#2c3e50" />
+        <MaterialIcons
+          name={followUser ? 'gps-fixed' : 'gps-not-fixed'}
+          size={24}
+          color="#2c3e50"
+        />
       </Pressable>
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  gpsButton: {
+    position: 'absolute',
+    bottom: 220,
+    right: 20,
+    backgroundColor: 'white',
+    padding: 14,
+    borderRadius: 30,
+    elevation: 6,
+  },
+});
