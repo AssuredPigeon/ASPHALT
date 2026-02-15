@@ -1,5 +1,7 @@
-// import { Redirect } from 'expo-router';
+import { Redirect } from 'expo-router';
 
-//export default function Index() {
-//    return <Redirect href="/login" />;
-//}
+// Redirige al login por defecto.
+// _layout.tsx maneja la lógica de si ir a /(tabs) o /login según el token.
+export default function Index() {
+  return <Redirect href="/login" />;
+}
