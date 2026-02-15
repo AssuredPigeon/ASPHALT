@@ -1,17 +1,19 @@
-import { Switch, useColorScheme } from "react-native";
+import { useTheme } from '@/theme';
+import { Switch } from 'react-native';
 
 export default function ThemeToggle() {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
+  const { isDark, toggleTheme, theme } = useTheme();
 
   return (
     <Switch
       value={isDark}
+      onValueChange={toggleTheme}
       trackColor={{
-        false: "#334155", // gris oscuro cuando está apagado
-        true: "#2f5b9d",  // azul cuando está activo
+        false: theme.colors.surfaceSecondary,
+        true:  theme.colors.primary,
       }}
-      thumbColor={isDark ? "#ffffff" : "#f1f5f9"}
+      thumbColor={isDark ? theme.colors.text : theme.colors.textSecondary}
+      ios_backgroundColor={theme.colors.surfaceSecondary}
     />
   );
 }

@@ -1,26 +1,34 @@
-import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import AuthBackground from "../ui/AuthBackground";
-import ThemeToggle from "./ThemeToggle";
-import UserHeader from "./UserHeader";
+import type { AppTheme } from '@/theme';
+import { useTheme } from '@/theme';
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import AuthBackground from '../ui/AuthBackground';
+import ThemeToggle from './ThemeToggle';
+import UserHeader from './UserHeader';
 
 export default function SidebarMenu() {
+  const { theme } = useTheme();
+  const styles = makeStyles(theme);
+
   return (
     <View style={styles.container}>
-      
+
       {/* Background decorativo */}
       <AuthBackground />
 
       {/* Contenido */}
       <View style={styles.content}>
         <UserHeader />
-        {/* Separador */}
+
         <View style={styles.divider} />
 
         <View>
-          <Pressable style={styles.menuItem} onPress={() => router.navigate("/SettingsScreen")}>
-            <Ionicons name="settings-outline" size={20} color="white" />
+          <Pressable
+            style={({ pressed }) => [styles.menuItem, pressed && styles.menuItemPressed]}
+            onPress={() => router.navigate('/SettingsScreen')}
+          >
+            <Ionicons name="settings-outline" size={theme.iconSize.md} color={theme.colors.text} />
             <Text style={styles.option}>Ajustes</Text>
           </Pressable>
         </View>
@@ -29,7 +37,7 @@ export default function SidebarMenu() {
 
         <View style={styles.toggleRow}>
           <View style={styles.toggleLeft}>
-            <Ionicons name="moon-outline" size={20} color="white" />
+            <Ionicons name="moon-outline" size={theme.iconSize.md} color={theme.colors.text} />
             <Text style={styles.option}>Tema Oscuro</Text>
           </View>
           <ThemeToggle />
@@ -40,47 +48,47 @@ export default function SidebarMenu() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#0F172A",
-    position: "relative", 
-  },
-
-  content: {
-    flex: 1,
-    padding: 30,
-    marginTop: 60,
-    zIndex: 10, // encima
-  },
-
-  menuItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 15,
-  },
-
-  option: {
-    color: "white",
-    fontSize: 18,
-    fontWeight: "500",
-  },
-
-  toggleRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-
-  toggleLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-
-  divider: {
-    height: 1,
-    backgroundColor: "rgba(255,255,255,0.1)",
-    marginVertical: 24,
-  },
-});
+const makeStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      flex:            1,
+      backgroundColor: theme.colors.background,
+      position:        'relative',
+    },
+    content: {
+      flex:      1,
+      padding:   theme.spacing[7],
+      marginTop: theme.spacing[14],
+      zIndex:    theme.zIndex.raised,
+    },
+    menuItem: {
+      flexDirection: 'row',
+      alignItems:    'center',
+      gap:           theme.spacing[3.5],
+      paddingVertical: theme.spacing[2],
+      paddingHorizontal: theme.spacing[2],
+      borderRadius:  theme.borderRadius.sm,
+    },
+    menuItemPressed: {
+      backgroundColor: theme.colors.primaryMuted,
+    },
+    option: {
+      ...theme.typography.styles.subtitle,
+      color: theme.colors.text,
+    },
+    toggleRow: {
+      flexDirection:  'row',
+      justifyContent: 'space-between',
+      alignItems:     'center',
+    },
+    toggleLeft: {
+      flexDirection: 'row',
+      alignItems:    'center',
+      gap:           theme.spacing[3],
+    },
+    divider: {
+      height:          1,
+      backgroundColor: theme.colors.divider,
+      marginVertical:  theme.spacing.sectionGap,
+    },
+  });

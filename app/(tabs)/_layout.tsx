@@ -1,16 +1,26 @@
+import { useTheme } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 
 export default function TabLayout() {
+  const { theme } = useTheme();
+
   return (
     <Tabs
       screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: '#7FA3E2',
+        headerShown:          false,
+        tabBarActiveTintColor: theme.colors.tabActive,
+        tabBarInactiveTintColor: theme.colors.tabInactive,
         tabBarStyle: {
-          backgroundColor: '#0f172a', 
-          borderTopWidth: 0, // Quita la línea gris
-          elevation:0, // Quita la sombra en Android
+          backgroundColor: theme.colors.navBackground,
+          borderTopWidth:  1,
+          borderTopColor:  theme.colors.navBorder,
+          elevation:       0,
+          height:          85,//theme.componentSize.tabBarHeight,
+          paddingBottom:  15,
+        },
+        tabBarLabelStyle: {
+          ...theme.typography.styles.label,
         },
       }}
     >

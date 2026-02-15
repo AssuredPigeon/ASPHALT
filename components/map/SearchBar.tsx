@@ -1,51 +1,56 @@
+import type { AppTheme } from '@/theme';
+import { useTheme } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 type Props = {
-  onActivate: () => void; // Función que se llama al presionar la barra
+  onActivate: () => void;
 };
 
 export default function SearchBar({ onActivate }: Props) {
+  const { theme } = useTheme();
+  const styles = makeStyles(theme);
+
   return (
     <Pressable onPress={onActivate} style={styles.pressable}>
       <View style={styles.container}>
-        <Ionicons name="search" size={20} color="#F4F4F8" />
+        <Ionicons name="search" size={20} color={theme.colors.textSecondary} />
         <TextInput
           placeholder="Buscar ubicación"
-          placeholderTextColor="#F4F4F8"
+          placeholderTextColor={theme.colors.inputPlaceholder}
           style={styles.input}
-          editable={false} // No editable, actúa como botón
-          pointerEvents="none" // Evita que el TextInput capture toques
+          editable={false}
+          pointerEvents="none"
         />
       </View>
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
-  pressable: {
-    position: 'absolute',
-    top: 60, // Ajusta según tu barra de estado
-    left: 20,
-    right: 20,
-    zIndex: 10, // Para que esté sobre el mapa
-  },
-  container: {
-    backgroundColor: '#152D5C',
-    borderRadius: 25,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 15,
-    height: 45,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 3, // Para Android
-  },
-  input: {
-    marginLeft: 10,
-    color: '#e9e5e5', // Cambiado de blanco a oscuro para verse
-    flex: 1,
-  },
-});
+const makeStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    pressable: {
+      position: 'absolute',
+      top:      60,
+      left:     theme.spacing.screenH,
+      right:    theme.spacing.screenH,
+      zIndex:   theme.zIndex.sticky,
+    },
+    container: {
+      backgroundColor:  theme.colors.surface,
+      borderRadius:     theme.borderRadius.full,
+      flexDirection:    'row',
+      alignItems:       'center',
+      paddingHorizontal: theme.spacing.md,
+      height:           theme.componentSize.buttonHeightSm + 5,
+      borderWidth:      1,
+      borderColor:      theme.colors.border,
+      ...theme.shadows.lg,
+    },
+    input: {
+      marginLeft: theme.spacing.sm,
+      color:      theme.colors.text,
+      flex:       1,
+      ...theme.typography.styles.body,
+    },
+  });
