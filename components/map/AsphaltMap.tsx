@@ -18,7 +18,7 @@ export default function AsphaltMap({ location }: Props) {
   const lastLocationRef = useRef<LocationObject | null>(null);
   const [followUser, setFollowUser] = useState(true);
 
-  // 🌞 Light style (solo Android lo usará)
+  // Light style (solo Android lo usará)
   const lightMapStyle = [
     {
       elementType: 'geometry',
@@ -36,7 +36,7 @@ export default function AsphaltMap({ location }: Props) {
     },
   ];
 
-  // 🌙 Dark elegante (solo Android)
+  // Dark elegante (solo Android)
   const darkMapStyle = [
     {
       elementType: 'geometry',
@@ -58,7 +58,7 @@ export default function AsphaltMap({ location }: Props) {
     },
   ];
 
-  // 📏 Distancia (Haversine)
+  // Distancia (Haversine)
   const getDistance = (
     lat1: number,
     lon1: number,
@@ -80,7 +80,7 @@ export default function AsphaltMap({ location }: Props) {
     return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   };
 
-  // 🔍 Zoom dinámico
+  // Zoom dinámico
   const getRegion = (location: LocationObject): Region => {
     const speed = location.coords.speed ?? 0;
 
@@ -97,7 +97,7 @@ export default function AsphaltMap({ location }: Props) {
     };
   };
 
-  // 📍 Seguimiento optimizado
+  // Seguimiento optimizado
   useEffect(() => {
     if (!location || !followUser) return;
 
