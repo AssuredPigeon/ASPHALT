@@ -26,7 +26,9 @@ export default function LoginScreen() {
   const [rememberMe, setRememberMe] = useState(false);
 
   const [request, response, promptAsync] = Google.useAuthRequest({
-    clientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID!,
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID!,
+    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID!,
+    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID!
   });
 
   useEffect(() => {
@@ -84,12 +86,18 @@ export default function LoginScreen() {
 
       console.log("LOGIN RESPONSE:", res.data);
 
-      const { token, refreshToken } = res?.data || {};
+      const { accessToken, refreshToken } = res?.data || {};
+      console.log("TOKEN:", accessToken);
+      console.log("REFRESH TOKEN:", refreshToken);
 
-      if (token) {
-        await login(token, refreshToken);
-        // guardamos sesion (token / usuario)
-        router.replace("/(tabs)");
+      if (accessToken) {
+        try {
+          await login(accessToken, refreshToken);
+          console.log("LOGIN EXITOSO, redirigiendo...");
+          router.replace("/(tabs)");
+        } catch (err) {
+          console.error("ERROR en login():", err);
+        }
       }
     } catch (error: any) {
       Alert.alert(
