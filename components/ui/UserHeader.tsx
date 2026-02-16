@@ -26,7 +26,7 @@ export default function UserHeader({ userName = 'Ainy' }: Props) {
           <Text style={styles.userName}>{userName}</Text>
         </Text>
 
-        <Pressable onPress={() => router.push('/')}>
+        <Pressable onPress={() => router.navigate('/Profile')}>
           <Text style={styles.link}>Ver perfil</Text>
         </Pressable>
       </View>

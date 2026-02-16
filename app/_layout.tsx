@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Stack, useRouter } from 'expo-router';
 import { useState } from 'react';
 
-// ── Inner layout — ya dentro de ThemeProvider, puede usar useTheme ─────────
+// Inner layout — ya dentro de ThemeProvider, puede usar useTheme 
 function RootLayoutInner() {
   const [showSplash, setShowSplash] = useState(true);
   const router = useRouter();
@@ -19,7 +19,7 @@ function RootLayoutInner() {
     }
   };
 
-  // SplashScreen ahora SÍ está dentro de ThemeProvider ✅
+  // SplashScreen ahora SÍ está dentro de ThemeProvider
   if (showSplash) {
     return <SplashScreen onComplete={handleSplashComplete} />;
   }
@@ -27,7 +27,7 @@ function RootLayoutInner() {
   return <Stack screenOptions={{ headerShown: false }} />;
 }
 
-// ── Root: ThemeProvider es siempre el wrapper más externo ─────────────────
+// Root: ThemeProvider es siempre el wrapper más externo 
 export default function RootLayout() {
   return (
     <ThemeProvider>
