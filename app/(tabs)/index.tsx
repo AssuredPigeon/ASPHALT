@@ -8,10 +8,10 @@ import { Alert, StyleSheet, View } from 'react-native';
 import MapView, { Region } from 'react-native-maps';
 
 export default function HomeScreen() {
-  const [location,     setLocation]     = useState<Location.LocationObject | null>(null);
+  const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
-  const mapRef  = useRef<MapView>(null);
+  const mapRef = useRef<MapView>(null);
   // Guardamos la suscripción para poder cancelarla al desmontar
   const watchRef = useRef<Location.LocationSubscription | null>(null);
 
@@ -40,8 +40,8 @@ export default function HomeScreen() {
     // distanceInterval: 1 → o cuando el auto se mueve 1m (lo primero)
     watchRef.current = await Location.watchPositionAsync(
       {
-        accuracy:         Location.Accuracy.BestForNavigation,
-        timeInterval:     1000,
+        accuracy: Location.Accuracy.BestForNavigation,
+        timeInterval: 1000,
         distanceInterval: 1,
       },
       (newLocation) => setLocation(newLocation)
@@ -53,9 +53,9 @@ export default function HomeScreen() {
   const handleSelectLocation = (lat: number, lon: number, _name: string) => {
     if (mapRef.current) {
       const region: Region = {
-        latitude:      lat,
-        longitude:     lon,
-        latitudeDelta:  0.01,
+        latitude: lat,
+        longitude: lon,
+        latitudeDelta: 0.01,
         longitudeDelta: 0.01,
       };
       mapRef.current.animateToRegion(region, 1000);
@@ -89,11 +89,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   overlay: {
-    position:         'absolute',
-    bottom:           0,
-    left:             0,
-    right:            0,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     paddingHorizontal: 10,
-    paddingBottom:    20,
+    paddingBottom: 20,
   },
 });

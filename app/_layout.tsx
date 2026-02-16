@@ -1,25 +1,29 @@
-import SplashScreen from '@/components/SplashScreen';
-import { ThemeProvider } from '@/theme/ThemeContext';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Stack, useRouter } from 'expo-router';
-import { useState } from 'react';
+import SplashScreen from "@/components/SplashScreen";
+import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { ThemeProvider } from "@/theme/ThemeContext";
+import { Stack, useRouter } from "expo-router";
+import { useState } from "react";
 
 // ── Inner layout — ya dentro de ThemeProvider, puede usar useTheme ─────────
 function RootLayoutInner() {
   const [showSplash, setShowSplash] = useState(true);
+  const { user, loading } = useAuth();
   const router = useRouter();
 
-  const handleSplashComplete = async () => {
+  const handleSplashComplete = () => {
     setShowSplash(false);
-    const token = await AsyncStorage.getItem('userToken');
-    if (token) {
-      router.replace('/(tabs)');
+
+    // Esperamos a que AuthContext termine de validar
+    if (loading) return;
+
+    if (user) {
+      router.replace("/(tabs)");
     } else {
-      router.replace('/login');
+      router.replace("/login");
     }
   };
 
-  // SplashScreen ahora SÍ está dentro de ThemeProvider ✅
+  // SplashScreen ahora SÍ está dentro de ThemeProvider
   if (showSplash) {
     return <SplashScreen onComplete={handleSplashComplete} />;
   }
@@ -31,7 +35,9 @@ function RootLayoutInner() {
 export default function RootLayout() {
   return (
     <ThemeProvider>
-      <RootLayoutInner />
+      <AuthProvider>
+        <RootLayoutInner />
+      </AuthProvider>
     </ThemeProvider>
   );
 }
