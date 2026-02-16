@@ -383,4 +383,25 @@ router.post("/logout", async (req, res) => {
   }
 });
 
+/* ME - Obtener usuario autenticado */
+const authMiddleware = require("../middleware/authMiddleware");
+
+router.get("/me", authMiddleware, async (req, res) => {
+  try {
+    const result = await db.query(
+      "SELECT id_usuario, email, nombre, nivel, puntos FROM usuarios WHERE id_usuario = $1",
+      [req.user.id_usuario]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
+    res.json({ user: result.rows[0] });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error al obtener usuario" });
+  }
+});
+
 module.exports = router;
