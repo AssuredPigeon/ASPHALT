@@ -1,3 +1,4 @@
+import { useRecentSearches } from '@/hooks/useRecentSearches';
 import type { AppTheme } from '@/theme';
 import { useTheme } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -49,10 +50,7 @@ export default function SearchModal({ visible, onClose, onSelectLocation, locati
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const recentSearches: SearchResult[] = [
-    { name: 'Panamericano · Tijuana', lat: 32.524, lon: -117.021 },
-    { name: 'Waldos · Tijuana',       lat: 32.525, lon: -117.020 },
-  ];
+  const { recentSearches, saveSearch, removeSearch, clearAll } = useRecentSearches();
 
   const nearbyCategories = [
     { name: 'Hoteles',     category: 'Hoteles',     icon: 'bed-outline'        as IoniconsName },
@@ -78,7 +76,18 @@ export default function SearchModal({ visible, onClose, onSelectLocation, locati
   };
 
   const handleSelect = (item: SearchResult) => {
-    onSelectLocation(Number(item.lat), Number(item.lon), item.display_name ?? item.name ?? 'Ubicación');
+    const name = item.display_name ?? item.name ?? 'Ubicación';
+
+    // Guardar en recientes (solo si no es categoría de "Encuentra cerca")
+    if (!item.category) {
+      saveSearch({
+        name,
+        lat: Number(item.lat),
+        lon: Number(item.lon),
+      });
+    }
+
+    onSelectLocation(Number(item.lat), Number(item.lon), name);
     setQuery('');
     setResults([]);
     onClose();
@@ -119,7 +128,11 @@ export default function SearchModal({ visible, onClose, onSelectLocation, locati
 
           {/* Lista */}
           <FlatList
-            data={query.length > 0 ? results : recentSearches}
+            data={
+              query.length > 0
+                ? results
+                : recentSearches.map(s => ({ name: s.name, lat: s.lat, lon: s.lon }))
+            }
             keyExtractor={(item, index) => item.place_id ?? (item.name ?? '') + index}
             renderItem={({ item }) => (
               <TouchableOpacity
@@ -137,6 +150,17 @@ export default function SearchModal({ visible, onClose, onSelectLocation, locati
                 <Text style={styles.resultText} numberOfLines={1}>
                   {item.display_name ?? item.name ?? 'Sin nombre'}
                 </Text>
+
+                {/* Botón eliminar (solo visible en recientes) */}
+                {query.length === 0 && (
+                  <Pressable
+                    onPress={() => removeSearch(item.name ?? '')}
+                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                    style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1 })}
+                  >
+                    <Ionicons name="close" size={16} color={theme.colors.textSecondary} />
+                  </Pressable>
+                )}
               </TouchableOpacity>
             )}
             ListHeaderComponent={
@@ -167,9 +191,24 @@ export default function SearchModal({ visible, onClose, onSelectLocation, locati
                     )}
                   />
 
-                  {/* Recientes */}
-                  <Text style={styles.sectionTitle}>Recientes</Text>
+                  {/* Header de Recientes con botón "Borrar todo" */}
+                  {recentSearches.length > 0 && (
+                    <View style={styles.sectionHeader}>
+                      <Text style={styles.sectionTitle}>Recientes</Text>
+                      <Pressable
+                        onPress={clearAll}
+                        style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1 })}
+                      >
+                        <Text style={styles.clearAllText}>Borrar todo</Text>
+                      </Pressable>
+                    </View>
+                  )}
                 </View>
+              ) : null
+            }
+            ListEmptyComponent={
+              query.length === 0 ? (
+                <Text style={styles.emptyText}>Sin búsquedas recientes</Text>
               ) : null
             }
             keyboardShouldPersistTaps="handled"
@@ -189,25 +228,25 @@ const makeStyles = (theme: AppTheme) =>
       justifyContent:  'flex-start',
     },
     container: {
-      backgroundColor:     theme.colors.background,
-      marginTop:           55,
-      flex:                1,
+      backgroundColor:      theme.colors.background,
+      marginTop:            55,
+      flex:                 1,
       borderTopLeftRadius:  theme.borderRadius.modal,
       borderTopRightRadius: theme.borderRadius.modal,
-      paddingHorizontal:   theme.spacing.screenH,
-      paddingTop:          theme.spacing[3.5],
+      paddingHorizontal:    theme.spacing.screenH,
+      paddingTop:           theme.spacing[3.5],
     },
 
     // Barra
     header: {
-      flexDirection:    'row',
-      alignItems:       'center',
-      backgroundColor:  theme.colors.inputBackground,
-      borderRadius:     theme.borderRadius.input,
-      borderWidth:      1,
-      borderColor:      theme.colors.inputBorder,
+      flexDirection:     'row',
+      alignItems:        'center',
+      backgroundColor:   theme.colors.inputBackground,
+      borderRadius:      theme.borderRadius.input,
+      borderWidth:       1,
+      borderColor:       theme.colors.inputBorder,
       paddingHorizontal: theme.spacing[3],
-      marginBottom:     theme.spacing[2.5],
+      marginBottom:      theme.spacing[2.5],
     },
     searchIcon: {
       marginRight: theme.spacing.sm,
@@ -220,16 +259,16 @@ const makeStyles = (theme: AppTheme) =>
     },
     cancelText: {
       ...theme.typography.styles.captionMedium,
-      color:          theme.colors.textSecondary,
-      marginLeft:     theme.spacing.sm,
+      color:           theme.colors.textSecondary,
+      marginLeft:      theme.spacing.sm,
       paddingVertical: theme.spacing[2.5],
     },
 
     // Resultados
     resultItem: {
-      flexDirection:   'row',
-      alignItems:      'center',
-      paddingVertical: theme.spacing[3],
+      flexDirection:     'row',
+      alignItems:        'center',
+      paddingVertical:   theme.spacing[3],
       borderBottomWidth: 0.5,
       borderBottomColor: theme.colors.divider,
     },
@@ -249,25 +288,42 @@ const makeStyles = (theme: AppTheme) =>
     },
 
     // Secciones
+    sectionHeader: {
+      flexDirection:  'row',
+      justifyContent: 'space-between',
+      alignItems:     'center',
+      marginTop:      theme.spacing.md,
+      marginBottom:   theme.spacing[2.5],
+    },
     sectionTitle: {
       ...theme.typography.styles.overline,
       color:        theme.colors.textSecondary,
       marginTop:    theme.spacing.md,
       marginBottom: theme.spacing[2.5],
     },
+    clearAllText: {
+      ...theme.typography.styles.captionMedium,
+      color: theme.colors.textSecondary,
+    },
+    emptyText: {
+      ...theme.typography.styles.caption,
+      color:     theme.colors.textSecondary,
+      textAlign: 'center',
+      marginTop: theme.spacing.lg,
+    },
 
     // Chips de categoría
     categoryItem: {
-      flexDirection:    'row',
-      alignItems:       'center',
-      backgroundColor:  theme.colors.surfaceTertiary,
-      paddingVertical:  theme.spacing[2.5],
+      flexDirection:     'row',
+      alignItems:        'center',
+      backgroundColor:   theme.colors.surfaceTertiary,
+      paddingVertical:   theme.spacing[2.5],
       paddingHorizontal: theme.spacing.md,
-      borderRadius:     theme.borderRadius.full,
-      marginRight:      theme.spacing[2.5],
-      borderWidth:      1,
-      borderColor:      theme.colors.primaryBorder,
-      gap:              theme.spacing.sm,
+      borderRadius:      theme.borderRadius.full,
+      marginRight:       theme.spacing[2.5],
+      borderWidth:       1,
+      borderColor:       theme.colors.primaryBorder,
+      gap:               theme.spacing.sm,
     },
     categoryText: {
       ...theme.typography.styles.captionMedium,
