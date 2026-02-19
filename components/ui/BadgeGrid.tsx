@@ -1,12 +1,7 @@
+import type { Badge } from '@/types/badge'
 import { Ionicons } from '@expo/vector-icons'
 import { StyleSheet, View } from 'react-native'
 import { useTheme } from '../../theme'
-
-type Badge = {
-  id: number
-  icon?: string   // nombre de Ionicon, ej: 'star', 'road'
-  earned: boolean
-}
 
 type Props = { badges: Badge[] }
 
@@ -16,6 +11,7 @@ export default function BadgeGrid({ badges }: Props) {
 
   return (
     <View style={styles.grid}>
+      {/* Itera sobre badges y devuelve un badge */}
       {badges.map((badge) => (
         <View
           key={badge.id}

@@ -1,12 +1,12 @@
-import { Ionicons } from '@expo/vector-icons'
-import { useRouter } from 'expo-router'
-import { useState } from 'react'
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import {
   ScrollView, StyleSheet, Text,
   TextInput, TouchableOpacity, View
-} from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { useTheme } from '../theme'
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context'; // margenes seguros
+import { useTheme } from '../theme';
 
 export default function EditProfileScreen() {
   const router = useRouter()
@@ -14,11 +14,11 @@ export default function EditProfileScreen() {
   const { colors, typography, spacing, borderRadius } = theme
   const insets = useSafeAreaInsets()
 
-  const [email, setEmail]               = useState('')
-  const [newPassword, setNewPassword]   = useState('')
+  const [email, setEmail]                     = useState('')
+  const [newPassword, setNewPassword]         = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [showPass, setShowPass]         = useState(false)
-  const [showConfirm, setShowConfirm]   = useState(false)
+  const [showPass, setShowPass]               = useState(false)
+  const [showConfirm, setShowConfirm]         = useState(false)
 
   const passwordMismatch =
     confirmPassword !== '' && confirmPassword !== newPassword
@@ -28,14 +28,14 @@ export default function EditProfileScreen() {
       backgroundColor: colors.background,
       paddingTop: insets.top,
     }]}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}
+      <ScrollView 
+        showsVerticalScrollIndicator={false} // se oculta
+        keyboardShouldPersistTaps="handled" // como afectan los taps con el teclado
+        contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}
       >
         <View style={{ paddingHorizontal: spacing.screenH, paddingTop: 16 }}>
 
-          {/* HEADER */}
+          {/* HEADER — back (izq) + guardar ícono (der) */}
           <View style={[styles.row, { marginBottom: spacing[8] }]}>
             <TouchableOpacity
               onPress={() => router.back()}
@@ -48,26 +48,28 @@ export default function EditProfileScreen() {
               <Ionicons name="chevron-back" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
 
-            <Text style={{
-              color: colors.text,
-              fontFamily: typography.fontFamily.bold,
-              fontSize: typography.fontSize.lg,
-            }}>
-              Editar Perfil
-            </Text>
-
-            <View style={{ width: 38 }} />
+            {/* Botón guardar en el header (ícono de disco/save) */}
+            <TouchableOpacity
+              style={[styles.iconBtn, {
+                borderRadius: borderRadius.button,
+                borderColor: colors.primary,
+                backgroundColor: colors.primary,
+              }]}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="save-outline" size={18} color={colors.textInverse ?? '#fff'} />
+            </TouchableOpacity>
           </View>
 
-          {/* AVATAR */}
+          {/* AVATAR circular + cámara */}
           <View style={[styles.centered, { marginBottom: spacing[9] }]}>
-            <View style={[styles.avatarWrap, {
-              borderRadius: borderRadius.xl,
-              borderColor: colors.primaryBorder,
-            }]}>
-              <Ionicons name="person" size={40} color={colors.primary} />
+            <View style={styles.avatarWrap}>
+              {/* Círculo de avatar */}
+              <View style={[styles.avatarCircle, { borderColor: colors.primaryBorder }]}>
+                <Ionicons name="person" size={40} color={colors.primary} />
+              </View>
+              {/* Botón cámara */}
               <TouchableOpacity style={[styles.cameraBtn, {
-                borderRadius: borderRadius.sm,
                 borderColor: colors.background,
               }]}>
                 <Ionicons name="camera" size={14} color="#fff" />
@@ -105,7 +107,7 @@ export default function EditProfileScreen() {
                 fontSize: typography.fontSize.md,
                 flex: 1,
               }}>
-                Viajero #1
+                usuario1234
               </Text>
               <View style={[styles.autoTag, { backgroundColor: colors.primaryMuted }]}>
                 <Text style={{
@@ -253,51 +255,8 @@ export default function EditProfileScreen() {
             )}
           </View>
 
-          {/* CERRAR SESIÓN */}
-          <TouchableOpacity
-            style={[styles.signOutBtn, {
-              borderRadius: borderRadius.button,
-              borderColor: colors.errorMuted,
-            }]}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="log-out-outline" size={18} color={colors.error} />
-            <Text style={{
-              color: colors.error,
-              fontFamily: typography.fontFamily.semiBold,
-              fontSize: typography.fontSize.sm,
-            }}>
-              Cerrar sesión
-            </Text>
-          </TouchableOpacity>
-
         </View>
       </ScrollView>
-
-      {/* BOTÓN GUARDAR FIJO */}
-      <View style={[styles.saveBar, {
-        paddingBottom: insets.bottom + 12,
-        borderTopColor: colors.border,
-        backgroundColor: colors.background,
-      }]}>
-        <TouchableOpacity
-          style={[styles.saveBtn, {
-            borderRadius: borderRadius.button,
-            backgroundColor: colors.primary,
-          }]}
-          activeOpacity={0.85}
-        >
-          <Ionicons name="checkmark" size={18} color={colors.textInverse} />
-          <Text style={{
-            color: colors.textInverse,
-            fontFamily: typography.fontFamily.bold,
-            fontSize: typography.fontSize.base,
-          }}>
-            Guardar cambios
-          </Text>
-        </TouchableOpacity>
-      </View>
-
     </View>
   )
 }
@@ -310,6 +269,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   centered: { alignItems: 'center' },
+
   iconBtn: {
     width: 38, height: 38,
     backgroundColor: 'rgba(255,255,255,0.05)',
@@ -317,23 +277,38 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+
+  /* Wrapper para posicionar el botón de cámara */
   avatarWrap: {
+    position: 'relative',
+    width: 88,
+    height: 88,
+  },
+
+  /* Avatar circular */
+  avatarCircle: {
     width: 88, height: 88,
+    borderRadius: 44,           // circular
     backgroundColor: '#1A2744',
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
+
+  /* Botón cámara superpuesto */
   cameraBtn: {
     position: 'absolute',
-    bottom: -6, right: -6,
+    bottom: -4, right: -4,
     width: 30, height: 30,
+    borderRadius: 15,           // circular
     backgroundColor: '#4C8DFF',
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
+
   label: { fontSize: 10, letterSpacing: 1 },
+
   readonlyField: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -352,33 +327,13 @@ const styles = StyleSheet.create({
   },
   inputInner: { flex: 1, padding: 14 },
   eyeBtn: { paddingHorizontal: 14 },
+
   divider: { height: 1 },
+
   errorRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
     marginTop: 6,
-  },
-  signOutBtn: {
-    padding: 13,
-    borderWidth: 1,
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  saveBar: {
-    position: 'absolute',
-    bottom: 0, left: 0, right: 0,
-    paddingHorizontal: 18,
-    paddingTop: 14,
-    borderTopWidth: 1,
-  },
-  saveBtn: {
-    height: 50,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
   },
 })

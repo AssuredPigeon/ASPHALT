@@ -1,6 +1,7 @@
 import { useTheme } from '@/theme';
 import { StyleSheet, Text, View } from 'react-native';
 
+// Solo puede ser 1 o 2
 type Props = {
   type: 'report' | 'trip'
   title: string
@@ -11,15 +12,19 @@ type Props = {
 
 export default function HistoryCard({ type, title, subtitle, right, status }: Props) {
   const { theme } = useTheme()
-  const { typography, borderRadius } = theme
+  const { colors, typography, borderRadius } = theme
 
-  const dotColor = status === 'confirmado' ? '#4DFFA0' : '#FFB347'
+  const dotColor = status === 'confirmado' ? '#22C55E' : '#F59E0B'
 
   return (
     <View style={styles.row}>
 
       {type === 'trip' ? (
-        <View style={[styles.tripIcon, { borderRadius: borderRadius.md }]}>
+        <View style={[styles.tripIcon, {
+          borderRadius: borderRadius.md,
+          backgroundColor: colors.primaryMuted,
+          borderColor:     colors.primaryBorder,
+        }]}>
           <Text style={{ fontSize: 16 }}>🛣️</Text>
         </View>
       ) : (
@@ -27,31 +32,40 @@ export default function HistoryCard({ type, title, subtitle, right, status }: Pr
       )}
 
       <View style={styles.content}>
-        <Text style={[styles.title, { fontFamily: typography.fontFamily.semiBold }]}>
+        <Text style={[styles.title, {
+          color:      colors.text,
+          fontFamily: typography.fontFamily.semiBold,
+        }]}>
           {title}
         </Text>
-        <Text style={[styles.subtitle, { fontFamily: typography.fontFamily.regular }]}>
+        <Text style={[styles.subtitle, {
+          color:      colors.textSecondary,
+          fontFamily: typography.fontFamily.regular,
+        }]}>
           {subtitle}
         </Text>
       </View>
 
-      {right && (
-        status ? (
-          <View style={[
-            styles.statusBadge,
-            { backgroundColor: status === 'confirmado'
-                ? 'rgba(77,255,160,0.1)'
-                : 'rgba(255,179,71,0.1)' }
-          ]}>
+      {right && ( // condicional; T: Renderiza o F: Nada
+        status ? ( // Si existe: Renderiza, sino, nada
+          <View style={[styles.statusBadge, {
+            backgroundColor: status === 'confirmado'
+            // nullish coalescing operator: si existe, se usa y respeta, si no, usa el fallback
+              ? colors.successMuted  ?? 'rgba(34,197,94,0.12)'
+              : colors.warningMuted  ?? 'rgba(245,158,11,0.12)',
+          }]}>
             <Text style={[styles.statusText, {
-              color: dotColor,
-              fontFamily: typography.fontFamily.semiBold
+              color:      dotColor,
+              fontFamily: typography.fontFamily.semiBold,
             }]}>
               {status}
             </Text>
           </View>
         ) : (
-          <Text style={[styles.rightText, { fontFamily: typography.fontFamily.semiBold }]}>
+          <Text style={[styles.rightText, {
+            color:      colors.textSecondary,
+            fontFamily: typography.fontFamily.semiBold,
+          }]}>
             {right}
           </Text>
         )
@@ -75,17 +89,15 @@ const styles = StyleSheet.create({
   },
   tripIcon: {
     width: 36, height: 36,
-    backgroundColor: 'rgba(62,110,255,0.1)',
     borderWidth: 1,
-    borderColor: 'rgba(62,110,255,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
   },
-  content: { flex: 1, gap: 2 },
-  title: { color: '#fff', fontSize: 13 },
-  subtitle: { color: 'rgba(255,255,255,0.3)', fontSize: 11 },
+  content:     { flex: 1, gap: 2 },
+  title:       { fontSize: 13 },
+  subtitle:    { fontSize: 11 },
   statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-  statusText: { fontSize: 10 },
-  rightText: { color: 'rgba(255,255,255,0.5)', fontSize: 12 },
+  statusText:  { fontSize: 10 },
+  rightText:   { fontSize: 12 },
 })
