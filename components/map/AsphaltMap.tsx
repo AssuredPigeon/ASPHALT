@@ -2,15 +2,20 @@ import type { AppTheme } from '@/theme';
 import { useTheme } from '@/theme';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LocationObject } from 'expo-location';
-import { useEffect, useRef, useState } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Platform, Pressable, StyleSheet } from 'react-native';
 import MapView, { Region } from 'react-native-maps';
+
+// Lo que index.tsx podrá llamar desde afuera
+export type AsphaltMapHandle = {
+  navigateTo: (lat: number, lon: number) => void;
+};
 
 interface Props {
   location: LocationObject | null;
 }
 
-export default function AsphaltMap({ location }: Props) {
+const AsphaltMap = forwardRef<AsphaltMapHandle, Props>(({ location }, ref) => {
   const { theme, isDark } = useTheme();
   const styles = makeStyles(theme);
 
@@ -18,7 +23,23 @@ export default function AsphaltMap({ location }: Props) {
   const lastLocationRef = useRef<LocationObject | null>(null);
   const [followUser, setFollowUser] = useState(true);
 
-  // Light style (solo Android lo usará)
+  // Exponer navigateTo hacia index.tsx
+  useImperativeHandle(ref, () => ({
+    navigateTo: (lat: number, lon: number) => {
+      setFollowUser(false); // dejar de seguir al usuario mientras ve la búsqueda
+      mapRef.current?.animateToRegion(
+        {
+          latitude:      lat,
+          longitude:     lon,
+          latitudeDelta:  0.01,
+          longitudeDelta: 0.01,
+        },
+        1000
+      );
+    },
+  }));
+
+  // Light style (solo Android)
   const lightMapStyle = [
     {
       elementType: 'geometry',
@@ -80,7 +101,7 @@ export default function AsphaltMap({ location }: Props) {
     return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   };
 
-  // Zoom dinámico
+  // Zoom dinámico según velocidad
   const getRegion = (location: LocationObject): Region => {
     const speed = location.coords.speed ?? 0;
 
@@ -90,9 +111,9 @@ export default function AsphaltMap({ location }: Props) {
       0.005;
 
     return {
-      latitude: location.coords.latitude,
-      longitude: location.coords.longitude,
-      latitudeDelta: delta,
+      latitude:       location.coords.latitude,
+      longitude:      location.coords.longitude,
+      latitudeDelta:  delta,
       longitudeDelta: delta,
     };
   };
@@ -175,23 +196,25 @@ export default function AsphaltMap({ location }: Props) {
       </Pressable>
     </>
   );
-}
+});
+
+export default AsphaltMap;
 
 const makeStyles = (theme: AppTheme) =>
   StyleSheet.create({
     gpsButton: {
-      position: 'absolute',
-      bottom: 250,
-      right: theme.spacing.screenH,
+      position:        'absolute',
+      bottom:          250,
+      right:           theme.spacing.screenH,
       backgroundColor: theme.colors.surface,
-      padding: theme.spacing[3.5],
-      borderRadius: theme.borderRadius.full,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
+      padding:         theme.spacing[3.5],
+      borderRadius:    theme.borderRadius.full,
+      borderWidth:     1,
+      borderColor:     theme.colors.border,
       ...theme.shadows.lg,
     },
     gpsButtonPressed: {
       backgroundColor: theme.colors.primaryMuted,
-      borderColor: theme.colors.primaryBorder,
+      borderColor:     theme.colors.primaryBorder,
     },
   });
