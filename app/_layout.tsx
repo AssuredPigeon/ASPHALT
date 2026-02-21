@@ -2,7 +2,7 @@ import SplashScreen from "@/components/SplashScreen";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { ThemeProvider } from "@/theme/ThemeContext";
 import { Stack, useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 // Inner layout — ya dentro de ThemeProvider, puede usar useTheme 
 function RootLayoutInner() {
@@ -22,6 +22,14 @@ function RootLayoutInner() {
       router.replace("/login");
     }
   };
+
+  // Si auth termina DESPUÉS del splash, redirigir
+  useEffect(() => {
+    if (showSplash || loading) return;
+    if (user) {
+      router.replace("/(tabs)");
+    }
+  }, [showSplash, loading, user]);
 
   // SplashScreen ahora SÍ está dentro de ThemeProvider
   if (showSplash) {

@@ -1,11 +1,12 @@
-import { useTheme } from '@/theme'
-import type { Badge } from '@/types/badge'
-import { Ionicons } from '@expo/vector-icons'
-import { useRouter } from 'expo-router'
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import BadgeGrid from '../components/ui/BadgeGrid'
-import HistoryCard from '../components/ui/HistoryCard'
+import { useAuth } from '@/context/AuthContext';
+import { useTheme } from '@/theme';
+import type { Badge } from '@/types/badge';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import BadgeGrid from '../components/ui/BadgeGrid';
+import HistoryCard from '../components/ui/HistoryCard';
 
 // badges estaticas
 const ALL_BADGES: Badge[] = [
@@ -24,28 +25,29 @@ const EARNED_BADGES = ALL_BADGES.filter(b => b.earned)
 // as const: literal exacto, permite un tipo estrictamente controlado
 const REPORTS = [
   { id: '1', street: 'Blvd. Agua Caliente', time: 'hace 2 horas', status: 'confirmado' as const },
-  { id: '2', street: 'Av. Revolución',       time: 'ayer',         status: 'confirmado' as const },
-  { id: '3', street: 'Calle 5ta',            time: 'hace 3 días',  status: 'pendiente'  as const },
+  { id: '2', street: 'Av. Revolución', time: 'ayer', status: 'confirmado' as const },
+  { id: '3', street: 'Calle 5ta', time: 'hace 3 días', status: 'pendiente' as const },
 ]
 
 const TRIPS = [
-  { id: '1', route: 'Casa → Trabajo',           date: 'Hoy, 7:42 AM',  km: '12.4 km' },
-  { id: '2', route: 'Plaza Río → Mesa de Otay', date: 'Ayer, 6:15 PM', km: '8.7 km'  },
+  { id: '1', route: 'Casa → Trabajo', date: 'Hoy, 7:42 AM', km: '12.4 km' },
+  { id: '2', route: 'Plaza Río → Mesa de Otay', date: 'Ayer, 6:15 PM', km: '8.7 km' },
 ]
 
 // Items visibles en el resumen antes del "Ver más"
 const REPORTS_PREVIEW = 2
-const TRIPS_PREVIEW   = 1
+const TRIPS_PREVIEW = 1
 
 export default function ProfileScreen() {
   const router = useRouter() // navegación
   const { theme } = useTheme()
   const { colors, typography, spacing, borderRadius } = theme
   const insets = useSafeAreaInsets() // El posicionamiento de capa
+  const { logout } = useAuth();
 
   // permite copia superficial
   const previewReports = REPORTS.slice(0, REPORTS_PREVIEW)
-  const previewTrips   = TRIPS.slice(0, TRIPS_PREVIEW)
+  const previewTrips = TRIPS.slice(0, TRIPS_PREVIEW)
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top }]}>
@@ -242,6 +244,10 @@ export default function ProfileScreen() {
           <TouchableOpacity
             style={[styles.signOutBtn, { borderRadius: borderRadius.button, backgroundColor: colors.error ?? '#E53E3E' }]}
             activeOpacity={0.85}
+            onPress={async () => {
+              await logout();
+              router.replace('/login');
+            }}
           >
             <Ionicons name="log-out-outline" size={20} color="#fff" />
             <Text style={{ color: '#fff', fontFamily: typography.fontFamily.bold, fontSize: typography.fontSize.base }}>
@@ -256,9 +262,9 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container:     { flex: 1 },
-  row:           { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  centered:      { alignItems: 'center' },
+  container: { flex: 1 },
+  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  centered: { alignItems: 'center' },
   iconBtn: {
     width: 38, height: 38,
     backgroundColor: 'rgba(0,0,0,0.04)',
@@ -283,9 +289,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.04)',
     borderWidth: 1,
   },
-  divider:       { height: 1 },
+  divider: { height: 1 },
   cardContainer: { borderWidth: 1, overflow: 'hidden' },
-  borderBottom:  { borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.06)' },
+  borderBottom: { borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.06)' },
   signOutBtn: {
     height: 52,
     flexDirection: 'row',
