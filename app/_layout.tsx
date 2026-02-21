@@ -4,7 +4,7 @@ import { ThemeProvider } from "@/theme/ThemeContext";
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 
-// ── Inner layout — ya dentro de ThemeProvider, puede usar useTheme ─────────
+// Inner layout — ya dentro de ThemeProvider, puede usar useTheme 
 function RootLayoutInner() {
   const [showSplash, setShowSplash] = useState(true);
   const { user, loading } = useAuth();
@@ -39,7 +39,7 @@ function RootLayoutInner() {
   return <Stack screenOptions={{ headerShown: false }} />;
 }
 
-// ── Root: ThemeProvider es siempre el wrapper más externo ─────────────────
+// Root: ThemeProvider es siempre el wrapper más externo 
 export default function RootLayout() {
   return (
     <ThemeProvider>
