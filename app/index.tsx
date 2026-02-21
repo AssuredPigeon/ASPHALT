@@ -1,7 +1,11 @@
+import { useAuth } from '@/context/AuthContext';
 import { Redirect } from 'expo-router';
+import { View } from 'react-native';
 
-// Redirige al login por defecto.
-// _layout.tsx maneja la lógica de si ir a /(tabs) o /login según el token.
 export default function Index() {
+  const { user, loading } = useAuth();
+
+  if (loading) return <View />;
+  if (user) return <Redirect href="/(tabs)" />;
   return <Redirect href="/login" />;
 }

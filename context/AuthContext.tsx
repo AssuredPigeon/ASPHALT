@@ -28,6 +28,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const checkUser = async () => {
     const token = await getToken();
+    console.log("CHECK USER - token existe:", !!token);
 
     if (!token) {
       setLoading(false);
@@ -36,11 +37,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     try {
       const res = await api.get("/auth/me");
+      console.log("CHECK USER - /auth/me OK:", res.data);
       setUser(res.data.user);
-    } catch (error) {
+    } catch (error: any) {
+      console.log("CHECK USER - error:", error?.response?.status, error?.message);
       await removeToken();
       setUser(null);
     } finally {
+      console.log("CHECK USER - loading → false, user:", user);
       setLoading(false);
     }
   };
