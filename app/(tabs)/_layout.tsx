@@ -1,9 +1,11 @@
 import { useTheme } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 export default function TabLayout() {
   const { theme } = useTheme();
+  const { t } = useTranslation();
 
   return (
     <Tabs
@@ -27,7 +29,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Mapa',
+          title: t('tabs.map'),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="map" size={size} color={color} />
           ),
@@ -37,7 +39,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="explore"
         options={{
-          title: 'Menú',
+          title: t('tabs.menu'),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="menu" size={size} color={color} />
           ),

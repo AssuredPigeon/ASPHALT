@@ -3,6 +3,7 @@ import { useTheme } from '@/theme';
 import type { Badge } from '@/types/badge';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BadgeGrid from '../components/ui/BadgeGrid';
@@ -44,6 +45,7 @@ export default function ProfileScreen() {
   const { colors, typography, spacing, borderRadius } = theme
   const insets = useSafeAreaInsets() // El posicionamiento de capa
   const { logout } = useAuth();
+  const { t } = useTranslation();
 
   // permite copia superficial
   const previewReports = REPORTS.slice(0, REPORTS_PREVIEW)
@@ -84,7 +86,7 @@ export default function ProfileScreen() {
               fontSize: typography.fontSize['2xl'],
               marginBottom: 2,
             }}>
-              Viajero #1
+              {t('profile.traveler')}
             </Text>
             <Text style={{
               color: colors.textSecondary,
@@ -92,7 +94,7 @@ export default function ProfileScreen() {
               fontSize: typography.fontSize.sm,
               marginBottom: spacing[4],
             }}>
-              Se unió hace # días
+              {t('profile.joined')}
             </Text>
             <TouchableOpacity
               onPress={() => router.navigate('/EditProfile' as any)}
@@ -105,7 +107,7 @@ export default function ProfileScreen() {
                 fontFamily: typography.fontFamily.medium,
                 fontSize: typography.fontSize.sm,
               }}>
-                Editar perfil
+                {t('profile.editProfile')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -118,7 +120,7 @@ export default function ProfileScreen() {
                 fontFamily: typography.fontFamily.bold,
                 fontSize: typography.fontSize.md,
               }}>
-                Insignias desbloqueadas
+                {t('profile.unlockedBadges')}
               </Text>
               {/* Ver TODAS incluyendo bloqueadas */}
               <TouchableOpacity onPress={() => router.navigate('/Badges' as any)}>
@@ -127,7 +129,7 @@ export default function ProfileScreen() {
                   fontFamily: typography.fontFamily.medium,
                   fontSize: typography.fontSize.sm,
                 }}>
-                  Ver Todas
+                  {t('profile.seeAll')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -137,7 +139,7 @@ export default function ProfileScreen() {
               fontSize: typography.fontSize.xs,
               marginBottom: spacing[3],
             }}>
-              Gana insignias por ayudar a otros conductores
+              {t('profile.badgesHint')}
             </Text>
             {/* Solo muestra badges ganadas, sin candados */}
             <BadgeGrid badges={EARNED_BADGES} />
@@ -153,7 +155,7 @@ export default function ProfileScreen() {
                 fontFamily: typography.fontFamily.bold,
                 fontSize: typography.fontSize.md,
               }}>
-                Historial de Reportes
+                {t('profile.reportsHistory')}
               </Text>
               <TouchableOpacity onPress={() => router.navigate('/ReportsHistory' as any)}>
                 <Text style={{
@@ -161,7 +163,7 @@ export default function ProfileScreen() {
                   fontFamily: typography.fontFamily.medium,
                   fontSize: typography.fontSize.sm,
                 }}>
-                  Ver más
+                  {t('profile.seeMore')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -171,7 +173,7 @@ export default function ProfileScreen() {
               fontSize: typography.fontSize.xs,
               marginBottom: spacing[3],
             }}>
-              Último reporte
+              {t('profile.lastReport')}
             </Text>
             <View style={[styles.cardContainer, {
               backgroundColor: colors.backgroundSecondary,
@@ -202,7 +204,7 @@ export default function ProfileScreen() {
                 fontFamily: typography.fontFamily.bold,
                 fontSize: typography.fontSize.md,
               }}>
-                Historial de Viajes
+                {t('profile.tripsHistory')}
               </Text>
               <TouchableOpacity onPress={() => router.navigate('/TripsHistory')}>
                 <Text style={{
@@ -210,7 +212,7 @@ export default function ProfileScreen() {
                   fontFamily: typography.fontFamily.medium,
                   fontSize: typography.fontSize.sm,
                 }}>
-                  Ver más
+                  {t('profile.seeMore')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -220,20 +222,20 @@ export default function ProfileScreen() {
               fontSize: typography.fontSize.xs,
               marginBottom: spacing[3],
             }}>
-              Último viaje
+              {t('profile.lastTrip')}
             </Text>
             <View style={[styles.cardContainer, {
               backgroundColor: colors.backgroundSecondary,
               borderColor: colors.border,
               borderRadius: borderRadius.lg,
             }]}>
-              {previewTrips.map((t, i) => (
-                <View key={t.id} style={i < previewTrips.length - 1 ? styles.borderBottom : undefined}>
+              {previewTrips.map((t2, i) => (
+                <View key={t2.id} style={i < previewTrips.length - 1 ? styles.borderBottom : undefined}>
                   <HistoryCard
                     type="trip"
-                    title={t.route}
-                    subtitle={t.date}
-                    right={t.km}
+                    title={t2.route}
+                    subtitle={t2.date}
+                    right={t2.km}
                   />
                 </View>
               ))}
@@ -251,7 +253,7 @@ export default function ProfileScreen() {
           >
             <Ionicons name="log-out-outline" size={20} color="#fff" />
             <Text style={{ color: '#fff', fontFamily: typography.fontFamily.bold, fontSize: typography.fontSize.base }}>
-              Cerrar Sesión
+              {t('profile.signOut')}
             </Text>
           </TouchableOpacity>
 

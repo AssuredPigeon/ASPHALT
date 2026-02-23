@@ -3,12 +3,14 @@ import AuthButton from '@/components/ui/AuthButton';
 import AuthInput from '@/components/ui/AuthInput';
 import api from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
 
   const { email } = useLocalSearchParams<{ email: string }>();
   console.log("EMAIL EN RESET:", email);
@@ -19,19 +21,19 @@ export default function ResetPasswordScreen() {
 
   const validatePassword = (password: string) => {
   if (password.length < 8) {
-    return 'Debe tener al menos 8 caracteres';
+    return t('resetPassword.errors.minLength');
   }
 
   if (/\s/.test(password)) {
-    return 'No debe contener espacios';
+    return t('resetPassword.errors.noSpaces');
   }
 
   if (!/[A-Za-z]/.test(password)) {
-    return 'Debe contener al menos una letra';
+    return t('resetPassword.errors.needLetter');
   }
 
   if (!/[0-9]/.test(password)) {
-    return 'Debe contener al menos un número';
+    return t('resetPassword.errors.needNumber');
   }
 
   return null; // válida
@@ -59,7 +61,7 @@ export default function ResetPasswordScreen() {
     } catch (error: any) {
         Alert.alert(
         'Error',
-        error?.response?.data?.message || 'Ocurrió un error'
+        error?.response?.data?.message || t('resetPassword.errors.generic')
         );
     } finally {
         setLoading(false);
@@ -75,18 +77,16 @@ export default function ResetPasswordScreen() {
         style={styles.logo}
       />
 
-      <Text style={styles.subtitle}>
-        Las calles no avisan.{'\n'}Asphalt sí.
-      </Text>
+      <Text style={styles.subtitle}>{t('auth.subtitle')}</Text>
 
       <View style={styles.card}>
-      <Text style={styles.title}>Crear nueva contraseña</Text>
+      <Text style={styles.title}>{t('resetPassword.title')}</Text>
 
 
         <View style={{ position: 'relative' }}>
         <AuthInput
             icon="lock-closed-outline"
-            placeholder="Contraseña"
+            placeholder={t('auth.passwordPlaceholder')}
             secureTextEntry={!showPassword}
             value={password}
             onChangeText={setPassword}
@@ -110,46 +110,44 @@ export default function ResetPasswordScreen() {
         </View>
 
         <View style={styles.rulesBox}>
-        <Text style={styles.rulesTitle}>Haz lo siguiente:</Text>
+        <Text style={styles.rulesTitle}>{t('resetPassword.rulesTitle')}</Text>
 
         <Text style={[
             styles.ruleItem,
             password.length >= 8 && styles.ruleValid
         ]}>
-            • Usa mínimo 8 caracteres.
+            {t('resetPassword.rule1')}
         </Text>
 
         <Text style={[
             styles.ruleItem,
             /[A-Za-z]/.test(password) && styles.ruleValid
         ]}>
-            • Debe contener al menos una letra.
+            {t('resetPassword.rule2')}
         </Text>
 
         <Text style={[
             styles.ruleItem,
             !/\s/.test(password) && password.length > 0 && styles.ruleValid
         ]}>
-            • No uses espacios.
+            {t('resetPassword.rule3')}
         </Text>
 
         <Text style={[
             styles.ruleItem,
             /[0-9]/.test(password) && styles.ruleValid
         ]}>
-            • Debe contener al menos un número.
+            {t('resetPassword.rule4')}
         </Text>
         </View>
 
         <AuthButton
-          label={loading ? 'Verificando...' : 'Continuar'}
+          label={loading ? t('resetPassword.verifying') : t('resetPassword.continue')}
           onPress={handleLogin}
         />
 
         <Pressable onPress={() => router.push('/login')}>
-          <Text style={[styles.helper]}>
-            Volver
-          </Text>
+          <Text style={[styles.helper]}>{t('resetPassword.back')}</Text>
         </Pressable>
 
       </View>

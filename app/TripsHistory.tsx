@@ -1,6 +1,7 @@
 import { useTheme } from '@/theme'
 import { Ionicons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
+import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import HistoryCard from '../components/ui/HistoryCard'
@@ -18,9 +19,10 @@ export default function TripsHistoryScreen() {
   const { theme } = useTheme()
   const { colors, typography, spacing, borderRadius } = theme
   const insets = useSafeAreaInsets()
+  const { t } = useTranslation()
 
   // acum, elemento: Suma cada uno, lo vuelve string y lo reduce a una cifra decima
-  const totalKm = TRIPS.reduce((acc, t) => acc + parseFloat(t.km), 0).toFixed(1)
+  const totalKm = TRIPS.reduce((acc, t2) => acc + parseFloat(t2.km), 0).toFixed(1)
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top }]}>
@@ -44,7 +46,7 @@ export default function TripsHistoryScreen() {
               fontFamily: typography.fontFamily.bold,
               fontSize: typography.fontSize.lg,
             }}>
-              Historial de Viajes
+              {t('trips.title')}
             </Text>
             <View style={{ width: 38 }} />
           </View>
@@ -69,7 +71,7 @@ export default function TripsHistoryScreen() {
                 fontFamily: typography.fontFamily.regular,
                 fontSize: typography.fontSize.xs,
               }}>
-                viajes
+                {t('trips.trips')}
               </Text>
             </View>
             <View style={[styles.summaryDivider, { backgroundColor: colors.primaryBorder }]} />
@@ -86,7 +88,7 @@ export default function TripsHistoryScreen() {
                 fontFamily: typography.fontFamily.regular,
                 fontSize: typography.fontSize.xs,
               }}>
-                km totales
+                {t('trips.totalKm')}
               </Text>
             </View>
           </View>
@@ -97,14 +99,14 @@ export default function TripsHistoryScreen() {
             borderColor: colors.border,
             borderRadius: borderRadius.lg,
           }]}>
-            {TRIPS.map((t, i) => (
+            {TRIPS.map((trip, i) => (
               // agregar borde menos al último
-              <View key={t.id} style={i < TRIPS.length - 1 ? styles.borderBottom : undefined}>
+              <View key={trip.id} style={i < TRIPS.length - 1 ? styles.borderBottom : undefined}>
                 <HistoryCard
                   type="trip"
-                  title={t.route}
-                  subtitle={t.date}
-                  right={t.km}
+                  title={trip.route}
+                  subtitle={trip.date}
+                  right={trip.km}
                 />
               </View>
             ))}

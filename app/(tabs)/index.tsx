@@ -4,11 +4,13 @@ import SearchModal from '@/components/map/SearchModal';
 import { SensorModule } from '@/components/SensorModule';
 import * as Location from 'expo-location';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, StyleSheet, View } from 'react-native';
 
 export default function HomeScreen() {
   const [location,     setLocation]     = useState<Location.LocationObject | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const { t } = useTranslation();
 
   // Ahora el ref apunta al handle de AsphaltMap, no al MapView directamente
   const mapRef = useRef<AsphaltMapHandle>(null);
@@ -27,9 +29,9 @@ export default function HomeScreen() {
 
     if (status !== 'granted') {
       Alert.alert(
-        'Permiso denegado',
-        'Asphalt necesita acceso a tu ubicación para funcionar. Actívalo en Configuración.',
-        [{ text: 'OK' }]
+        t('map.permissionDenied'),
+        t('map.permissionMessage'),
+        [{ text: t('map.ok') }]
       );
       return;
     }

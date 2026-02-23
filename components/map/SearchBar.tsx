@@ -1,6 +1,7 @@
 import type { AppTheme } from '@/theme';
 import { useTheme } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 type Props = {
@@ -10,13 +11,14 @@ type Props = {
 export default function SearchBar({ onActivate }: Props) {
   const { theme } = useTheme();
   const styles = makeStyles(theme);
+  const { t } = useTranslation();
 
   return (
     <Pressable onPress={onActivate} style={styles.pressable}>
       <View style={styles.container}>
         <Ionicons name="search" size={20} color={theme.colors.textSecondary} />
         <TextInput
-          placeholder="Buscar ubicación"
+          placeholder={t('search.placeholder')}
           placeholderTextColor={theme.colors.inputPlaceholder}
           style={styles.input}
           editable={false}

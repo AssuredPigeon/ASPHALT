@@ -1,6 +1,7 @@
 import { useTheme } from '@/theme'
 import { Ionicons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
+import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import HistoryCard from '../components/ui/HistoryCard'
@@ -18,6 +19,7 @@ export default function ReportsHistoryScreen() {
   const { theme } = useTheme()
   const { colors, typography, spacing, borderRadius } = theme
   const insets = useSafeAreaInsets()
+  const { t } = useTranslation()
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top }]}>
@@ -41,7 +43,7 @@ export default function ReportsHistoryScreen() {
               fontFamily: typography.fontFamily.bold,
               fontSize: typography.fontSize.lg,
             }}>
-              Historial de Reportes
+              {t('reports.title')}
             </Text>
             <View style={{ width: 38 }} />
           </View>
@@ -53,7 +55,7 @@ export default function ReportsHistoryScreen() {
             fontSize: typography.fontSize.sm,
             marginBottom: spacing[4],
           }}>
-            {REPORTS.length} reportes en total
+            {t('reports.total', { count: REPORTS.length })}
           </Text>
 
           {/* Lista completa */}

@@ -1,6 +1,7 @@
 import type { AppTheme } from '@/theme';
 import { useTheme } from '@/theme';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 type Props = {
@@ -11,6 +12,7 @@ type Props = {
 export default function UserHeader({ userName = 'Ainy' }: Props) {
   const { theme } = useTheme();
   const styles = makeStyles(theme);
+  const { t } = useTranslation();
 
   return (
     <View style={styles.row}>
@@ -19,15 +21,15 @@ export default function UserHeader({ userName = 'Ainy' }: Props) {
       <View style={styles.avatar} />
 
       <View style={styles.textContainer}>
-        <Text style={styles.hola}>¡Hola!</Text>
+        <Text style={styles.hola}>{t('userHeader.hello')}</Text>
 
         <Text style={styles.name}>
-          Viajero{' '}
+          {t('userHeader.traveler')}{' '}
           <Text style={styles.userName}>{userName}</Text>
         </Text>
 
         <Pressable onPress={() => router.navigate('/Profile')}>
-          <Text style={styles.link}>Ver perfil</Text>
+          <Text style={styles.link}>{t('userHeader.viewProfile')}</Text>
         </Pressable>
       </View>
 

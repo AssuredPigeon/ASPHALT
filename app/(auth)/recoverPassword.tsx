@@ -4,10 +4,12 @@ import AuthInput from '@/components/ui/AuthInput';
 import api from '@/services/api';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 export default function LoginScreen() {
     const router = useRouter();
+    const { t } = useTranslation();
 
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
@@ -16,7 +18,7 @@ export default function LoginScreen() {
         // Validación básica de email
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            Alert.alert('Error', 'Ingresa un correo electrónico válido');
+            Alert.alert('Error', t('recover.errors.invalidEmail'));
             return;
         }
 
@@ -35,7 +37,7 @@ export default function LoginScreen() {
             console.error(error);
             Alert.alert(
                 'Error',
-                error?.response?.data?.message || 'Ocurrió un error al enviar el correo.'
+                error?.response?.data?.message || t('recover.errors.sendError')
             );
         } finally {
             setLoading(false);
@@ -51,17 +53,15 @@ export default function LoginScreen() {
                 style={styles.logo}
             />
 
-            <Text style={styles.subtitle}>
-                Las calles no avisan.{'\n'}Asphalt sí.
-            </Text>
+            <Text style={styles.subtitle}>{t('auth.subtitle')}</Text>
 
             <View style={styles.card}>
 
-                <Text style={styles.title}>Recuperar Contraseña</Text>
+                <Text style={styles.title}>{t('recover.title')}</Text>
 
                 <AuthInput
                     icon="mail-outline"
-                    placeholder="Correo electrónico"
+                    placeholder={t('auth.emailPlaceholder')}
                     value={email}
                     onChangeText={setEmail}
                     autoCapitalize="none"
@@ -69,14 +69,12 @@ export default function LoginScreen() {
                 />
 
                 <AuthButton
-                    label={loading ? 'Ingresando...' : 'Continuar'}
+                    label={loading ? t('recover.continuing') : t('recover.continue')}
                     onPress={handleRecover}
                 />
 
                 <Pressable onPress={() => router.push('/login')}>
-                    <Text style={[styles.helper]}>
-                        Iniciar Sesion
-                    </Text>
+                    <Text style={[styles.helper]}>{t('recover.backToLogin')}</Text>
                 </Pressable>
 
             </View>
