@@ -1,10 +1,12 @@
 import AuthBackground from '@/components/ui/AuthBackground';
 import AuthButton from '@/components/ui/AuthButton';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
 export default function ConfirmPasswordScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
 
   return (
     <View style={styles.container}>
@@ -15,17 +17,13 @@ export default function ConfirmPasswordScreen() {
         style={styles.logo}
       />
 
-      <Text style={styles.subtitle}>
-        Las calles no avisan.{'\n'}Asphalt sí.
-      </Text>
+      <Text style={styles.subtitle}>{t('auth.subtitle')}</Text>
 
       <View style={styles.card}>
-        <Text style={styles.title}>
-          La contraseña se actualizó correctamente
-        </Text>
+        <Text style={styles.title}>{t('confirmPassword.title')}</Text>
 
         <AuthButton
-          label="Iniciar Sesión"
+          label={t('confirmPassword.loginButton')}
           onPress={() => router.replace('/login')}
         />
       </View>

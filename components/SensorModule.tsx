@@ -3,6 +3,7 @@ import { useTheme } from '@/theme';
 import * as Location from 'expo-location';
 import { Accelerometer } from 'expo-sensors';
 import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 
 // Kalman Filter 
@@ -73,12 +74,13 @@ const getSeverityStyles = (level: Severidad, theme: AppTheme) => {
 export function SensorModule({ location }: SensorProps) {
   const { theme } = useTheme();
   const styles    = makeStyles(theme);
+  const { t }     = useTranslation();
 
   const [{ x, y, z }, setData]     = useState({ x: 0, y: 0, z: 0 });
   const [anomalia,    setAnomalia]  = useState(0);
   const [subscription, setSubscription] = useState<any>(null);
   const [velocidad,   setVelocidad] = useState(0);
-  const [mensaje,     setMensaje]   = useState('Escaneando camino...');
+  const [mensaje,     setMensaje]   = useState<string>('scanning');
   const [severidad,   setSeveridad] = useState<Severidad>('Ninguna');
 
   const resetTimer    = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -140,19 +142,19 @@ export function SensorModule({ location }: SensorProps) {
         }
 
         if (delta > UMBRAL_SEVERO) {
-          setMensaje('¡CRÍTICO!');
+          setMensaje('critical');
           setSeveridad('Severo');
         } else if (delta > UMBRAL_MODERADO) {
-          setMensaje('Bache Detectado');
+          setMensaje('pothole');
           setSeveridad('Moderado');
         } else {
-          setMensaje('Irregularidad');
+          setMensaje('irregularity');
           setSeveridad('Leve');
         }
       } else {
         if (!resetTimer.current && severidadRef.current !== 'Ninguna') {
           resetTimer.current = setTimeout(() => {
-            setMensaje('Escaneando camino...');
+            setMensaje('scanning');
             setSeveridad('Ninguna');
             resetTimer.current = null;
           }, 1500);
@@ -179,13 +181,13 @@ export function SensorModule({ location }: SensorProps) {
 
       {/* Panel de velocidad */}
       <View style={styles.speedPanel}>
-        <Text style={styles.speedLabel}>Velocidad GPS</Text>
+        <Text style={styles.speedLabel}>{t('sensor.speedLabel')}</Text>
         <Text style={styles.speedValue}>{velocidad.toFixed(1)} km/h</Text>
       </View>
 
       {/* Tarjeta de estado */}
       <View style={[styles.card, severityStyles]}>
-        <Text style={styles.cardLabel}>Estado del Camino</Text>
+        <Text style={styles.cardLabel}>{t('sensor.roadStatus')}</Text>
         <Text style={[
           styles.statusText,
           severidad === 'Severo'   && { color: theme.colors.error   },
@@ -193,10 +195,10 @@ export function SensorModule({ location }: SensorProps) {
           severidad === 'Leve'     && { color: theme.colors.success  },
           severidad === 'Ninguna'  && { color: theme.colors.text     },
         ]}>
-          {mensaje}
+          {t(`sensor.${mensaje}`)}
         </Text>
         <Text style={styles.forceText}>
-          Anomalía G: +{anomalia.toFixed(3)}
+          {t('sensor.anomaly')} +{anomalia.toFixed(3)}
         </Text>
       </View>
 

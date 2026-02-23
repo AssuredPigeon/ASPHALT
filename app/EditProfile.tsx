@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ScrollView, StyleSheet, Text,
   TextInput, TouchableOpacity, View
@@ -13,6 +14,7 @@ export default function EditProfileScreen() {
   const { theme } = useTheme()
   const { colors, typography, spacing, borderRadius } = theme
   const insets = useSafeAreaInsets()
+  const { t } = useTranslation()
 
   const [email, setEmail]                     = useState('')
   const [newPassword, setNewPassword]         = useState('')
@@ -81,7 +83,7 @@ export default function EditProfileScreen() {
                 fontFamily: typography.fontFamily.semiBold,
                 fontSize: typography.fontSize.sm,
               }}>
-                Cambiar foto
+                {t('editProfile.changePhoto')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -93,7 +95,7 @@ export default function EditProfileScreen() {
               fontFamily: typography.fontFamily.semiBold,
               marginBottom: spacing[2],
             }]}>
-              USUARIO
+              {t('editProfile.username')}
             </Text>
             <View style={[styles.readonlyField, {
               borderRadius: borderRadius.input,
@@ -115,7 +117,7 @@ export default function EditProfileScreen() {
                   fontFamily: typography.fontFamily.medium,
                   fontSize: typography.fontSize.xs,
                 }}>
-                  Auto-asignado
+                  {t('editProfile.autoAssigned')}
                 </Text>
               </View>
             </View>
@@ -128,7 +130,7 @@ export default function EditProfileScreen() {
               fontFamily: typography.fontFamily.semiBold,
               marginBottom: spacing[2],
             }]}>
-              CORREO ELECTRÓNICO
+              {t('editProfile.email')}
             </Text>
             <View style={[styles.inputRow, {
               borderRadius: borderRadius.input,
@@ -144,7 +146,7 @@ export default function EditProfileScreen() {
                 }]}
                 value={email}
                 onChangeText={setEmail}
-                placeholder="tu@correo.com"
+                placeholder={t('editProfile.emailPlaceholder')}
                 placeholderTextColor={colors.inputPlaceholder}
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -166,7 +168,7 @@ export default function EditProfileScreen() {
               fontFamily: typography.fontFamily.semiBold,
               marginBottom: spacing[2],
             }]}>
-              NUEVA CONTRASEÑA
+              {t('editProfile.newPassword')}
             </Text>
             <View style={[styles.inputRow, {
               borderRadius: borderRadius.input,
@@ -182,7 +184,7 @@ export default function EditProfileScreen() {
                 }]}
                 value={newPassword}
                 onChangeText={setNewPassword}
-                placeholder="Dejar vacío para no cambiar"
+                placeholder={t('editProfile.passwordPlaceholder')}
                 placeholderTextColor={colors.inputPlaceholder}
                 secureTextEntry={!showPass}
                 autoCapitalize="none"
@@ -208,7 +210,7 @@ export default function EditProfileScreen() {
               fontFamily: typography.fontFamily.semiBold,
               marginBottom: spacing[2],
             }]}>
-              CONFIRMAR CONTRASEÑA
+              {t('editProfile.confirmPassword')}
             </Text>
             <View style={[styles.inputRow, {
               borderRadius: borderRadius.input,
@@ -224,7 +226,7 @@ export default function EditProfileScreen() {
                 }]}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
-                placeholder="Repite la contraseña"
+                placeholder={t('editProfile.confirmPlaceholder')}
                 placeholderTextColor={colors.inputPlaceholder}
                 secureTextEntry={!showConfirm}
                 autoCapitalize="none"
@@ -249,7 +251,7 @@ export default function EditProfileScreen() {
                   fontFamily: typography.fontFamily.medium,
                   fontSize: typography.fontSize.xs,
                 }}>
-                  Las contraseñas no coinciden
+                  {t('editProfile.passwordMismatch')}
                 </Text>
               </View>
             )}

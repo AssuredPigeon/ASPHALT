@@ -1,0 +1,207 @@
+{
+  "tabs": {
+    "map": "Map",
+    "menu": "Menu"
+  },
+  "settings": {
+    "title": "Settings",
+    "general": "General",
+    "distanceUnits": "Distance units",
+    "mile": "Mile",
+    "km": "km",
+    "language": "Language",
+    "map": "Map",
+    "mapView": "Map View",
+    "autoFocus": "Auto Focus",
+    "vehicleIcon": "Vehicle Icon",
+    "voice": "Voice",
+    "voiceVolume": "Voice guide volume",
+    "currentVoice": "Current Voice",
+    "muteCalls": "Mute during calls"
+  },
+  "language": {
+    "title": "Language",
+    "spanish": "Spanish",
+    "english": "English"
+  },
+  "map": {
+    "permissionDenied": "Permission denied",
+    "permissionMessage": "Asphalt needs access to your location to work. Enable it in Settings.",
+    "ok": "OK",
+    "searchPlaceholder": "Search place..."
+  },
+  "profile": {
+    "traveler": "Traveler #1",
+    "joined": "Joined # days ago",
+    "editProfile": "Edit profile",
+    "unlockedBadges": "Unlocked badges",
+    "seeAll": "See All",
+    "badgesHint": "Earn badges by helping other drivers",
+    "reportsHistory": "Reports History",
+    "seeMore": "See more",
+    "lastReport": "Last report",
+    "tripsHistory": "Trips History",
+    "lastTrip": "Last trip",
+    "signOut": "Sign Out"
+  },
+  "trips": {
+    "title": "Trips History",
+    "trips": "trips",
+    "totalKm": "total km"
+  },
+  "badges": {
+    "title": "All Badges",
+    "unlocked": "unlocked"
+  },
+  "editProfile": {
+    "changePhoto": "Change photo",
+    "username": "USERNAME",
+    "autoAssigned": "Auto-assigned",
+    "email": "EMAIL",
+    "emailPlaceholder": "you@email.com",
+    "newPassword": "NEW PASSWORD",
+    "passwordPlaceholder": "Leave blank to keep current",
+    "confirmPassword": "CONFIRM PASSWORD",
+    "confirmPlaceholder": "Repeat your password",
+    "passwordMismatch": "Passwords do not match"
+  },
+  "search": {
+    "placeholder": "Search location",
+    "cancel": "Cancel",
+    "nearby": "Find nearby",
+    "recent": "Recent",
+    "clearAll": "Clear all",
+    "noRecent": "No recent searches",
+    "categories": {
+      "Hoteles": "Hotels",
+      "Almuerzo": "Lunch",
+      "Gasolineras": "Gas Stations",
+      "Motel": "Motel",
+      "Cafeterías": "Coffee Shops"
+    }
+  },
+  "sidebar": {
+    "settings": "Settings",
+    "darkTheme": "Dark Theme"
+  },
+  "userHeader": {
+    "hello": "Hello!",
+    "traveler": "Traveler",
+    "viewProfile": "View profile"
+  },
+  "sensor": {
+    "scanning": "Scanning road...",
+    "speedLabel": "GPS Speed",
+    "roadStatus": "Road Status",
+    "critical": "CRITICAL!",
+    "pothole": "Pothole Detected",
+    "irregularity": "Irregularity",
+    "anomaly": "G Anomaly:"
+  },
+  "reports": {
+    "title": "Reports History",
+    "total": "{{count}} reports total"
+  },
+  "auth": {
+    "subtitle": "Roads don't warn you.\nAsphalt does.",
+    "emailPlaceholder": "Email address",
+    "passwordPlaceholder": "Password",
+    "rememberMe": "Remember me",
+    "loginButton": "Sign In",
+    "loggingIn": "Signing in...",
+    "forgotPassword": "Forgot your password?",
+    "registerButton": "Sign Up",
+    "registering": "Registering...",
+    "errors": {
+      "fillFields": "Please fill in all fields",
+      "invalidEmail": "Enter a valid email address",
+      "shortPassword": "Password must be at least 8 characters",
+      "wrongCredentials": "Incorrect email or password",
+      "googleError": "Could not sign in with Google",
+      "registerError": "Could not register"
+    },
+    "registerSuccess": "Registration successful",
+    "registerSuccessMsg": "You can now sign in"
+  },
+  "recover": {
+    "title": "Recover Password",
+    "continuing": "Sending...",
+    "continue": "Continue",
+    "backToLogin": "Sign In",
+    "errors": {
+      "invalidEmail": "Enter a valid email address",
+      "sendError": "An error occurred while sending the email."
+    }
+  },
+  "code": {
+    "inboxTitle": "Check your inbox",
+    "enterCode": "Enter the security code",
+    "verifying": "Verifying...",
+    "continue": "Continue",
+    "resend": "Resend code",
+    "resendSuccess": "Code resent successfully",
+    "errors": {
+      "sixDigits": "Enter all 6 digits",
+      "wrongCode": "Incorrect code",
+      "resendError": "Could not resend the code"
+    }
+  },
+  "resetPassword": {
+    "title": "Create new password",
+    "verifying": "Verifying...",
+    "continue": "Continue",
+    "back": "Back",
+    "rulesTitle": "Requirements:",
+    "rule1": "• At least 8 characters.",
+    "rule2": "• Must contain at least one letter.",
+    "rule3": "• No spaces allowed.",
+    "rule4": "• Must contain at least one number.",
+    "errors": {
+      "minLength": "Must be at least 8 characters",
+      "noSpaces": "Must not contain spaces",
+      "needLetter": "Must contain at least one letter",
+      "needNumber": "Must contain at least one number",
+      "generic": "An error occurred"
+    }
+  },
+  "confirmPassword": {
+    "title": "Password updated successfully",
+    "loginButton": "Sign In"
+  },
+  "badgesList": {
+    "explorer": {
+      "label": "Explorer",
+      "desc": "Make your first route report"
+    },
+    "researcher": {
+      "label": "Researcher",
+      "desc": "Confirm 5 reports from others"
+    },
+    "featured": {
+      "label": "Featured",
+      "desc": "Receive 10 confirmations"
+    },
+    "travelerPro": {
+      "label": "Traveler Pro",
+      "desc": "Log 20 trips"
+    },
+    "cartographer": {
+      "label": "Cartographer",
+      "desc": "Report on 5 different streets"
+    },
+    "legend": {
+      "label": "Legend",
+      "desc": "Reach 100 contribution points"
+    }
+  },
+  "authTabs": {
+    "login": "Sign In",
+    "register": "Register"
+  },
+  "guest": {
+    "button": "Guest"
+  },
+  "socialAuth": {
+    "label": "Or continue with"
+  }
+}

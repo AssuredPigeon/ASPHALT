@@ -11,6 +11,7 @@ import * as Google from "expo-auth-session/providers/google";
 import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Alert, Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 WebBrowser.maybeCompleteAuthSession();
@@ -18,6 +19,7 @@ WebBrowser.maybeCompleteAuthSession();
 export default function LoginScreen() {
   const router = useRouter();
   const { login } = useAuth();
+  const { t } = useTranslation(); 
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -52,7 +54,7 @@ export default function LoginScreen() {
         }
       } catch (error) {
         console.error("Error Google login:", error);
-        Alert.alert("Error", "No se pudo iniciar sesión con Google");
+        Alert.alert("Error", t('auth.errors.googleError'));
       }
     };
 
@@ -61,18 +63,18 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert("Error", "Completa todos los campos");
+      Alert.alert("Error", t('auth.errors.fillFields'));
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      Alert.alert("Error", "Ingresa un correo electrónico válido");
+      Alert.alert("Error", t('auth.errors.invalidEmail'));
       return;
     }
 
     if (password.length < 8) {
-      Alert.alert("Error", "La contraseña debe tener al menos 8 caracteres");
+      Alert.alert("Error", t('auth.errors.shortPassword'));
       return;
     }
 
@@ -102,7 +104,7 @@ export default function LoginScreen() {
     } catch (error: any) {
       Alert.alert(
         "Error",
-        error?.response?.data?.message || "Correo o contraseña incorrectos",
+        error?.response?.data?.message || t('auth.errors.wrongCredentials'),
       );
     } finally {
       setLoading(false);
@@ -118,9 +120,7 @@ export default function LoginScreen() {
         style={styles.logo}
       />
 
-      <Text style={styles.subtitle}>
-        Las calles no avisan.{"\n"}Asphalt sí.
-      </Text>
+      <Text style={styles.subtitle}>{t('auth.subtitle')}</Text>
 
       <View style={styles.card}>
         <AuthTabs
@@ -130,7 +130,7 @@ export default function LoginScreen() {
 
         <AuthInput
           icon="mail-outline"
-          placeholder="Correo electrónico"
+          placeholder={t('auth.emailPlaceholder')}
           value={email}
           onChangeText={setEmail}
           autoCapitalize="none"
@@ -140,7 +140,7 @@ export default function LoginScreen() {
         <View style={{ position: "relative" }}>
           <AuthInput
             icon="lock-closed-outline"
-            placeholder="Contraseña"
+            placeholder={t('auth.passwordPlaceholder')}
             secureTextEntry={!showPassword}
             value={password}
             onChangeText={setPassword}
@@ -173,22 +173,22 @@ export default function LoginScreen() {
           />
 
           <Text style={{ marginLeft: 8, fontSize: 13, color: "#334155" }}>
-            Recuérdame
+            {t('auth.rememberMe')}
           </Text>
         </Pressable>
 
         <AuthButton
-          label={loading ? "Ingresando..." : "Inicia Sesión"}
+          label={loading ? t('auth.loggingIn') : t('auth.loginButton')}
           onPress={handleLogin}
         />
 
         <Pressable onPress={() => router.push("/recoverPassword")}>
-          <Text style={[styles.helper]}>¿Has olvidado tu contraseña?</Text>
+          <Text style={[styles.helper]}>{t('auth.forgotPassword')}</Text>
         </Pressable>
 
         <GuestButton />
 
-        <SocialAuth label="O continúa con" />
+        <SocialAuth />
 
       </View>
     </View>
@@ -225,5 +225,4 @@ const styles = StyleSheet.create({
     color: "#1E5EFF",
     textAlign: "right",
   },
-
 });

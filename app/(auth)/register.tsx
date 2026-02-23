@@ -7,10 +7,12 @@ import api from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Image, StyleSheet, Text, View, Pressable } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { Alert, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 export default function RegisterScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -19,18 +21,18 @@ export default function RegisterScreen() {
 
   const handleRegister = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Completa todos los campos');
+      Alert.alert('Error', t('auth.errors.fillFields'));
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      Alert.alert('Error', 'Ingresa un correo electrónico válido');
+      Alert.alert('Error', t('auth.errors.invalidEmail'));
       return;
     }
 
     if (password.length < 8) {
-      Alert.alert('Error', 'La contraseña debe tener al menos 8 caracteres');
+      Alert.alert('Error', t('auth.errors.shortPassword'));
       return;
     }
 
@@ -43,11 +45,11 @@ export default function RegisterScreen() {
       });
 
       Alert.alert(
-        'Registro exitoso',
-        'Ahora puedes iniciar sesión',
+        t('auth.registerSuccess'),
+        t('auth.registerSuccessMsg'),
         [
           {
-            text: 'OK',
+            text: t('map.ok'),
             onPress: () => router.replace('/login'),
           },
         ]
@@ -56,7 +58,7 @@ export default function RegisterScreen() {
     } catch (error: any) {
       Alert.alert(
         'Error',
-        error?.response?.data?.message || 'No se pudo registrar'
+        error?.response?.data?.message || t('auth.errors.registerError')
       );
     } finally {
       setLoading(false);
@@ -72,9 +74,7 @@ export default function RegisterScreen() {
         style={styles.logo}
       />
 
-      <Text style={styles.subtitle}>
-        Las calles no avisan.{'\n'}Asphalt sí.
-      </Text>
+      <Text style={styles.subtitle}>{t('auth.subtitle')}</Text>
 
       <View style={styles.card}>
         <AuthTabs
@@ -84,7 +84,7 @@ export default function RegisterScreen() {
 
         <AuthInput
           icon="mail-outline"
-          placeholder="Correo electrónico"
+          placeholder={t('auth.emailPlaceholder')}
           value={email}
           onChangeText={setEmail}
           autoCapitalize="none"
@@ -94,7 +94,7 @@ export default function RegisterScreen() {
         <View style={{ position: 'relative' }}>
           <AuthInput
             icon="lock-closed-outline"
-            placeholder="Contraseña"
+            placeholder={t('auth.passwordPlaceholder')}
             secureTextEntry={!showPassword}
             value={password}
             onChangeText={setPassword}
@@ -117,7 +117,7 @@ export default function RegisterScreen() {
         </View>
 
         <AuthButton
-          label={loading ? 'Registrando...' : 'Regístrate'}
+          label={loading ? t('auth.registering') : t('auth.registerButton')}
           onPress={handleRegister}
         />
 

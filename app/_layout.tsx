@@ -1,5 +1,6 @@
 import SplashScreen from "@/components/SplashScreen";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
+import '@/i18n';
 import { ThemeProvider } from "@/theme/ThemeContext";
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";

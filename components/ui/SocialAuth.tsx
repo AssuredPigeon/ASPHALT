@@ -1,11 +1,15 @@
 import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 WebBrowser.maybeCompleteAuthSession();
 
-export default function SocialAuth({ label = 'O regístrate con' }: { label?: string }) {
+// label es opcional: si no se pasa, usa la traducción por defecto
+export default function SocialAuth({ label }: { label?: string }) {
+  const { t } = useTranslation();
+
   const [request, response, promptAsync] = Google.useAuthRequest({
     webClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID!,
     iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID!,
@@ -21,7 +25,8 @@ export default function SocialAuth({ label = 'O regístrate con' }: { label?: st
 
   return (
     <>
-      <Text style={styles.divider}>{label}</Text>
+      {/* Si viene prop la usa, si no usa la traducción */}
+      <Text style={styles.divider}>{label ?? t('socialAuth.label')}</Text>
 
       <View style={styles.row}>
         <Pressable

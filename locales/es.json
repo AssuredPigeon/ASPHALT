@@ -1,0 +1,207 @@
+{
+  "tabs": {
+    "map": "Mapa",
+    "menu": "Menú"
+  },
+  "settings": {
+    "title": "Ajustes",
+    "general": "General",
+    "distanceUnits": "Unidades de distancia",
+    "mile": "Milla",
+    "km": "km",
+    "language": "Idioma",
+    "map": "Mapa",
+    "mapView": "Vista del Mapa",
+    "autoFocus": "Auto Enfoque",
+    "vehicleIcon": "Icono del vehículo",
+    "voice": "Voz",
+    "voiceVolume": "Volumen de guía de voz",
+    "currentVoice": "Voz Actual",
+    "muteCalls": "Silenciar durante llamadas"
+  },
+  "language": {
+    "title": "Idioma",
+    "spanish": "Español",
+    "english": "Inglés"
+  },
+  "map": {
+    "permissionDenied": "Permiso denegado",
+    "permissionMessage": "Asphalt necesita acceso a tu ubicación para funcionar. Actívalo en Configuración.",
+    "ok": "OK",
+    "searchPlaceholder": "Buscar lugar..."
+  },
+  "profile": {
+    "traveler": "Viajero #1",
+    "joined": "Se unió hace # días",
+    "editProfile": "Editar perfil",
+    "unlockedBadges": "Insignias desbloqueadas",
+    "seeAll": "Ver Todas",
+    "badgesHint": "Gana insignias por ayudar a otros conductores",
+    "reportsHistory": "Historial de Reportes",
+    "seeMore": "Ver más",
+    "lastReport": "Último reporte",
+    "tripsHistory": "Historial de Viajes",
+    "lastTrip": "Último viaje",
+    "signOut": "Cerrar Sesión"
+  },
+  "trips": {
+    "title": "Historial de Viajes",
+    "trips": "viajes",
+    "totalKm": "km totales"
+  },
+  "badges": {
+    "title": "Todas las Insignias",
+    "unlocked": "desbloqueadas"
+  },
+  "editProfile": {
+    "changePhoto": "Cambiar foto",
+    "username": "USUARIO",
+    "autoAssigned": "Auto-asignado",
+    "email": "CORREO ELECTRÓNICO",
+    "emailPlaceholder": "tu@correo.com",
+    "newPassword": "NUEVA CONTRASEÑA",
+    "passwordPlaceholder": "Dejar vacío para no cambiar",
+    "confirmPassword": "CONFIRMAR CONTRASEÑA",
+    "confirmPlaceholder": "Repite la contraseña",
+    "passwordMismatch": "Las contraseñas no coinciden"
+  },
+  "search": {
+    "placeholder": "Buscar ubicación",
+    "cancel": "Cancelar",
+    "nearby": "Encuentra cerca",
+    "recent": "Recientes",
+    "clearAll": "Borrar todo",
+    "noRecent": "Sin búsquedas recientes",
+    "categories": {
+      "Hoteles": "Hoteles",
+      "Almuerzo": "Almuerzo",
+      "Gasolineras": "Gasolineras",
+      "Motel": "Motel",
+      "Cafeterías": "Cafeterías"
+    }
+  },
+  "sidebar": {
+    "settings": "Ajustes",
+    "darkTheme": "Tema Oscuro"
+  },
+  "userHeader": {
+    "hello": "¡Hola!",
+    "traveler": "Viajero",
+    "viewProfile": "Ver perfil"
+  },
+  "sensor": {
+    "scanning": "Escaneando camino...",
+    "speedLabel": "Velocidad GPS",
+    "roadStatus": "Estado del Camino",
+    "critical": "¡CRÍTICO!",
+    "pothole": "Bache Detectado",
+    "irregularity": "Irregularidad",
+    "anomaly": "Anomalía G:"
+  },
+  "reports": {
+    "title": "Historial de Reportes",
+    "total": "{{count}} reportes en total"
+  },
+  "auth": {
+    "subtitle": "Las calles no avisan.\nAsphalt sí.",
+    "emailPlaceholder": "Correo electrónico",
+    "passwordPlaceholder": "Contraseña",
+    "rememberMe": "Recuérdame",
+    "loginButton": "Inicia Sesión",
+    "loggingIn": "Ingresando...",
+    "forgotPassword": "¿Has olvidado tu contraseña?",
+    "registerButton": "Regístrate",
+    "registering": "Registrando...",
+    "errors": {
+      "fillFields": "Completa todos los campos",
+      "invalidEmail": "Ingresa un correo electrónico válido",
+      "shortPassword": "La contraseña debe tener al menos 8 caracteres",
+      "wrongCredentials": "Correo o contraseña incorrectos",
+      "googleError": "No se pudo iniciar sesión con Google",
+      "registerError": "No se pudo registrar"
+    },
+    "registerSuccess": "Registro exitoso",
+    "registerSuccessMsg": "Ahora puedes iniciar sesión"
+  },
+  "recover": {
+    "title": "Recuperar Contraseña",
+    "continuing": "Ingresando...",
+    "continue": "Continuar",
+    "backToLogin": "Iniciar Sesión",
+    "errors": {
+      "invalidEmail": "Ingresa un correo electrónico válido",
+      "sendError": "Ocurrió un error al enviar el correo."
+    }
+  },
+  "code": {
+    "inboxTitle": "Revisa tu bandeja de entrada",
+    "enterCode": "Ingresa el codigo de seguridad",
+    "verifying": "Verificando...",
+    "continue": "Continuar",
+    "resend": "Reenviar código",
+    "resendSuccess": "Código reenviado correctamente",
+    "errors": {
+      "sixDigits": "Ingresa los 6 dígitos",
+      "wrongCode": "Código incorrecto",
+      "resendError": "No se pudo reenviar el código"
+    }
+  },
+  "resetPassword": {
+    "title": "Crear nueva contraseña",
+    "verifying": "Verificando...",
+    "continue": "Continuar",
+    "back": "Volver",
+    "rulesTitle": "Haz lo siguiente:",
+    "rule1": "• Usa mínimo 8 caracteres.",
+    "rule2": "• Debe contener al menos una letra.",
+    "rule3": "• No uses espacios.",
+    "rule4": "• Debe contener al menos un número.",
+    "errors": {
+      "minLength": "Debe tener al menos 8 caracteres",
+      "noSpaces": "No debe contener espacios",
+      "needLetter": "Debe contener al menos una letra",
+      "needNumber": "Debe contener al menos un número",
+      "generic": "Ocurrió un error"
+    }
+  },
+  "confirmPassword": {
+    "title": "La contraseña se actualizó correctamente",
+    "loginButton": "Iniciar Sesión"
+  },
+  "badgesList": {
+    "explorer": {
+      "label": "Explorador",
+      "desc": "Haz tu primer reporte de ruta"
+    },
+    "researcher": {
+      "label": "Investigador",
+      "desc": "Confirma 5 reportes de otros"
+    },
+    "featured": {
+      "label": "Destacado",
+      "desc": "Recibe 10 confirmaciones"
+    },
+    "travelerPro": {
+      "label": "Viajero Pro",
+      "desc": "Registra 20 viajes"
+    },
+    "cartographer": {
+      "label": "Cartógrafo",
+      "desc": "Reporta en 5 calles distintas"
+    },
+    "legend": {
+      "label": "Leyenda",
+      "desc": "Alcanza 100 puntos de contribución"
+    }
+  },
+  "authTabs": {
+    "login": "Inicio Sesión",
+    "register": "Registro"
+  },
+  "guest": {
+    "button": "Invitado"
+  },
+  "socialAuth": {
+    "label": "O continúa con"
+  }
+}

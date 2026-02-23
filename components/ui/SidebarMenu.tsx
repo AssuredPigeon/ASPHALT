@@ -2,6 +2,7 @@ import type { AppTheme } from '@/theme';
 import { useTheme } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import AuthBackground from '../ui/AuthBackground';
 import ThemeToggle from './ThemeToggle';
@@ -10,6 +11,7 @@ import UserHeader from './UserHeader';
 export default function SidebarMenu() {
   const { theme } = useTheme();
   const styles = makeStyles(theme);
+  const { t } = useTranslation(); 
 
   return (
     <View style={styles.container}>
@@ -29,7 +31,7 @@ export default function SidebarMenu() {
             onPress={() => router.navigate('/SettingsScreen')}
           >
             <Ionicons name="settings-outline" size={theme.iconSize.md} color={theme.colors.text} />
-            <Text style={styles.option}>Ajustes</Text>
+            <Text style={styles.option}>{t('sidebar.settings')}</Text>
           </Pressable>
         </View>
 
@@ -38,7 +40,7 @@ export default function SidebarMenu() {
         <View style={styles.toggleRow}>
           <View style={styles.toggleLeft}>
             <Ionicons name="moon-outline" size={theme.iconSize.md} color={theme.colors.text} />
-            <Text style={styles.option}>Tema Oscuro</Text>
+            <Text style={styles.option}>{t('sidebar.darkTheme')}</Text>
           </View>
           <ThemeToggle />
         </View>

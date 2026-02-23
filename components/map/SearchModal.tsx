@@ -4,6 +4,7 @@ import { useTheme } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   FlatList,
@@ -45,6 +46,7 @@ type SearchResult = {
 export default function SearchModal({ visible, onClose, onSelectLocation, location }: Props) {
   const { theme } = useTheme();
   const styles    = makeStyles(theme);
+  const { t }     = useTranslation();
 
   const [query,   setQuery]   = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -52,12 +54,13 @@ export default function SearchModal({ visible, onClose, onSelectLocation, locati
 
   const { recentSearches, saveSearch, removeSearch, clearAll } = useRecentSearches();
 
+  // name → texto visible (traducido), category → key interna (NO traducir, se usa en CATEGORY_ICONS y handleSelect)
   const nearbyCategories = [
-    { name: 'Hoteles',     category: 'Hoteles',     icon: 'bed-outline'        as IoniconsName },
-    { name: 'Almuerzo',    category: 'Almuerzo',    icon: 'restaurant-outline' as IoniconsName },
-    { name: 'Gasolineras', category: 'Gasolineras', icon: 'water-outline'      as IoniconsName },
-    { name: 'Motel',       category: 'Motel',       icon: 'bed-outline'        as IoniconsName },
-    { name: 'Cafeterías',  category: 'Cafeterías',  icon: 'cafe-outline'       as IoniconsName },
+    { name: t('search.categories.Hoteles'),     category: 'Hoteles',     icon: 'bed-outline'        as IoniconsName },
+    { name: t('search.categories.Almuerzo'),    category: 'Almuerzo',    icon: 'restaurant-outline' as IoniconsName },
+    { name: t('search.categories.Gasolineras'), category: 'Gasolineras', icon: 'water-outline'      as IoniconsName },
+    { name: t('search.categories.Motel'),       category: 'Motel',       icon: 'bed-outline'        as IoniconsName },
+    { name: t('search.categories.Cafeterías'),  category: 'Cafeterías',  icon: 'cafe-outline'       as IoniconsName },
   ];
 
   const searchLocation = async (text: string) => {
@@ -102,7 +105,7 @@ export default function SearchModal({ visible, onClose, onSelectLocation, locati
           <View style={styles.header}>
             <Ionicons name="search" size={18} color={theme.colors.textSecondary} style={styles.searchIcon} />
             <TextInput
-              placeholder="Buscar ubicación"
+              placeholder={t('search.placeholder')}
               value={query}
               onChangeText={searchLocation}
               style={styles.input}
@@ -114,7 +117,7 @@ export default function SearchModal({ visible, onClose, onSelectLocation, locati
               onPress={onClose}
               style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
             >
-              <Text style={styles.cancelText}>Cancelar</Text>
+              <Text style={styles.cancelText}>{t('search.cancel')}</Text>
             </Pressable>
           </View>
 
@@ -167,7 +170,7 @@ export default function SearchModal({ visible, onClose, onSelectLocation, locati
               query.length === 0 ? (
                 <View>
                   {/* Encuentra cerca */}
-                  <Text style={styles.sectionTitle}>Encuentra cerca</Text>
+                  <Text style={styles.sectionTitle}>{t('search.nearby')}</Text>
                   <FlatList
                     data={nearbyCategories}
                     horizontal
@@ -194,12 +197,12 @@ export default function SearchModal({ visible, onClose, onSelectLocation, locati
                   {/* Header de Recientes con botón "Borrar todo" */}
                   {recentSearches.length > 0 && (
                     <View style={styles.sectionHeader}>
-                      <Text style={styles.sectionTitle}>Recientes</Text>
+                      <Text style={styles.sectionTitle}>{t('search.recent')}</Text>
                       <Pressable
                         onPress={clearAll}
                         style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1 })}
                       >
-                        <Text style={styles.clearAllText}>Borrar todo</Text>
+                        <Text style={styles.clearAllText}>{t('search.clearAll')}</Text>
                       </Pressable>
                     </View>
                   )}
@@ -208,7 +211,7 @@ export default function SearchModal({ visible, onClose, onSelectLocation, locati
             }
             ListEmptyComponent={
               query.length === 0 ? (
-                <Text style={styles.emptyText}>Sin búsquedas recientes</Text>
+                <Text style={styles.emptyText}>{t('search.noRecent')}</Text>
               ) : null
             }
             keyboardShouldPersistTaps="handled"

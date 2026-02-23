@@ -1,16 +1,18 @@
 import { useTheme } from '@/theme'
 import { Ionicons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
+import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
+// label y desc son KEYS de traducción, no strings directos
 const ALL_BADGES = [
-  { id: 1, icon: 'navigate',    label: 'Explorador',   earned: true,  desc: 'Haz tu primer reporte de ruta'      },
-  { id: 2, icon: 'search',      label: 'Investigador', earned: true,  desc: 'Confirma 5 reportes de otros'       },
-  { id: 3, icon: 'star',        label: 'Destacado',    earned: true,  desc: 'Recibe 10 confirmaciones'            },
-  { id: 4, icon: 'car',         label: 'Viajero Pro',  earned: false, desc: 'Registra 20 viajes'                  },
-  { id: 5, icon: 'map',         label: 'Cartógrafo',   earned: false, desc: 'Reporta en 5 calles distintas'      },
-  { id: 6, icon: 'trophy',      label: 'Leyenda',      earned: false, desc: 'Alcanza 100 puntos de contribución' },
+  { id: 1, icon: 'navigate', key: 'explorer',     earned: true  },
+  { id: 2, icon: 'search',   key: 'researcher',   earned: true  },
+  { id: 3, icon: 'star',     key: 'featured',     earned: true  },
+  { id: 4, icon: 'car',      key: 'travelerPro',  earned: false },
+  { id: 5, icon: 'map',      key: 'cartographer', earned: false },
+  { id: 6, icon: 'trophy',   key: 'legend',       earned: false },
 ]
 
 export default function BadgesScreen() {
@@ -18,6 +20,7 @@ export default function BadgesScreen() {
   const { theme } = useTheme()
   const { colors, typography, spacing, borderRadius } = theme
   const insets = useSafeAreaInsets()
+  const { t } = useTranslation()
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top }]}>
@@ -41,7 +44,7 @@ export default function BadgesScreen() {
               fontFamily: typography.fontFamily.bold,
               fontSize: typography.fontSize.lg,
             }}>
-              Todas las Insignias
+              {t('badges.title')}
             </Text>
             <View style={{ width: 38 }} />
           </View>
@@ -54,7 +57,7 @@ export default function BadgesScreen() {
             marginBottom: spacing[5],
           }}>
             {/* Devuelve un array con los que cumplen la condición: completadas*/}
-            {ALL_BADGES.filter(b => b.earned).length} de {ALL_BADGES.length} desbloqueadas
+            {ALL_BADGES.filter(b => b.earned).length} de {ALL_BADGES.length} {t('badges.unlocked')}
           </Text>
 
           {/* Grid de insignias */}
@@ -80,6 +83,8 @@ export default function BadgesScreen() {
                     <Ionicons name="lock-closed" size={22} color={colors.textTertiary ?? colors.textSecondary} />
                   )}
                 </View>
+
+                {/* Se traduce al renderizar usando la key del array */}
                 <Text style={{
                   color:      badge.earned ? colors.text : colors.textSecondary,
                   fontFamily: typography.fontFamily.semiBold,
@@ -87,7 +92,7 @@ export default function BadgesScreen() {
                   textAlign:  'center',
                   marginBottom: 4,
                 }}>
-                  {badge.label}
+                  {t(`badgesList.${badge.key}.label`)}
                 </Text>
                 <Text style={{
                   color:      colors.textSecondary,
@@ -96,7 +101,7 @@ export default function BadgesScreen() {
                   textAlign:  'center',
                   lineHeight: 13,
                 }}>
-                  {badge.desc}
+                  {t(`badgesList.${badge.key}.desc`)}
                 </Text>
               </View>
             ))}

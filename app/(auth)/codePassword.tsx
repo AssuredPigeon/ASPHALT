@@ -1,13 +1,15 @@
 import AuthBackground from '@/components/ui/AuthBackground';
 import AuthButton from '@/components/ui/AuthButton';
 import api from '@/services/api';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useState, useRef } from 'react';
-import { Alert, Image, Pressable, StyleSheet, Text, View, TextInput} from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Alert, Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
     export default function CodePasswordScreen() {
     const router = useRouter();
     const { email } = useLocalSearchParams();
+    const { t } = useTranslation();
 
     const [code, setCode] = useState(['', '', '', '', '', '']);
     const [loading, setLoading] = useState(false);
@@ -36,7 +38,7 @@ import { Alert, Image, Pressable, StyleSheet, Text, View, TextInput} from 'react
         const finalCode = code.join('');
 
         if (finalCode.length !== 6) {
-        Alert.alert('Error', 'Ingresa los 6 dígitos');
+        Alert.alert('Error', t('code.errors.sixDigits'));
         return;
         }
 
@@ -55,7 +57,7 @@ import { Alert, Image, Pressable, StyleSheet, Text, View, TextInput} from 'react
         } catch (error: any) {
         Alert.alert(
             'Error',
-            error?.response?.data?.message || 'Código incorrecto'
+            error?.response?.data?.message || t('code.errors.wrongCode')
         );
         } finally {
         setLoading(false);
@@ -68,12 +70,12 @@ import { Alert, Image, Pressable, StyleSheet, Text, View, TextInput} from 'react
 
         await api.post('/auth/forgot-password', { email });
 
-        Alert.alert('Éxito', 'Código reenviado correctamente');
+        Alert.alert(t('map.ok'), t('code.resendSuccess'));
 
     } catch (error: any) {
         Alert.alert(
         'Error',
-        error?.response?.data?.message || 'No se pudo reenviar el código'
+        error?.response?.data?.message || t('code.errors.resendError')
         );
     } finally {
         setLoading(false);
@@ -89,14 +91,12 @@ import { Alert, Image, Pressable, StyleSheet, Text, View, TextInput} from 'react
                 style={styles.logo}
             />
 
-            <Text style={styles.subtitle}>
-                Las calles no avisan.{'\n'}Asphalt sí.
-            </Text>
+            <Text style={styles.subtitle}>{t('auth.subtitle')}</Text>
 
             <View style={styles.card}>
 
-                <Text style={styles.title}>Revisa tu bandeja de entrada</Text>
-                <Text style={styles.text}>Ingresa el codigo de seguridad</Text>
+                <Text style={styles.title}>{t('code.inboxTitle')}</Text>
+                <Text style={styles.text}>{t('code.enterCode')}</Text>
 
                 <View style={styles.otpContainer}>
                     {code.map((digit, index) => (
@@ -115,14 +115,12 @@ import { Alert, Image, Pressable, StyleSheet, Text, View, TextInput} from 'react
                 </View>
 
                 <AuthButton
-                    label={loading ? 'Verificando...' : 'Continuar'}
+                    label={loading ? t('code.verifying') : t('code.continue')}
                     onPress={handleVerify}
                 />
 
                 <Pressable onPress={handleResendCode}>
-                <Text style={styles.helper}>
-                    Reenviar código
-                </Text>
+                <Text style={styles.helper}>{t('code.resend')}</Text>
                 </Pressable>
 
             </View>
