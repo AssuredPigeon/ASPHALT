@@ -1,3 +1,4 @@
+import { lightTheme } from '@/theme/light';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -5,6 +6,8 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 type Props = {
   onPress?: () => void;
 };
+
+const { colors } = lightTheme;
 
 export default function GuestButton({ onPress }: Props) {
   const router = useRouter(); // Hook
@@ -33,25 +36,26 @@ export default function GuestButton({ onPress }: Props) {
 
 const styles = StyleSheet.create({
   button: {
-    marginTop: 14,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 14,
+    marginTop:       14,
+    borderWidth:     1,
+    borderColor:     colors.border,
+    borderRadius:    14,
     paddingVertical: 12,
-    alignItems: 'center',
+    alignItems:      'center',
+    backgroundColor: colors.surface,
   },
   content: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems:    'center',
   },
   icon: {
-    width: 18,
-    height: 18,
-    resizeMode: 'contain',
+    width:       18,
+    height:      18,
+    resizeMode:  'contain',
     marginRight: 8,
   },
   text: {
-    color: '#111827',
+    color:      colors.text,
     fontWeight: '500',
   },
 });

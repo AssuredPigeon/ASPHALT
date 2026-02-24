@@ -1,72 +1,94 @@
+import type { AppTheme } from '@/theme';
+import { useTheme } from '@/theme';
 import { Audio } from 'expo-av';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Button, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
-export function AcousticSensor() {
-  const [recording, setRecording] = useState<Audio.Recording | null>(null);
+interface AcousticSensorProps {
+  drivingMode: boolean; // Cuando es true, el sensor arranca automáticamente
+}
+
+// Clasifica el tipo de superficie según el nivel de dB captado
+// Mientras más ruido de rodadura, más rugoso es el pavimento
+type Superficie = 'Sin señal' | 'Pavimento liso' | 'Asfalto regular' | 'Superficie rugosa' | 'Terreno irregular';
+
+function clasificarSuperficie(db: number): Superficie {
+  if (db <= -80) return 'Sin señal';
+  if (db <= -55) return 'Pavimento liso';
+  if (db <= -35) return 'Asfalto regular';
+  if (db <= -20) return 'Superficie rugosa';
+  return 'Terreno irregular';
+}
+
+// Color del punto según la superficie detectada
+const getDotColor = (superficie: Superficie, theme: AppTheme): string => {
+  switch (superficie) {
+    case 'Pavimento liso':    return theme.colors.success;
+    case 'Asfalto regular':   return theme.colors.primary;
+    case 'Superficie rugosa': return theme.colors.warning;
+    case 'Terreno irregular': return theme.colors.error;
+    default:                  return theme.colors.textSecondary;
+  }
+};
+
+export function AcousticSensor({ drivingMode }: AcousticSensorProps) {
+  const { theme } = useTheme();
+  const styles    = makeStyles(theme);
+
+  const [recording, setRecording]               = useState<Audio.Recording | null>(null);
   const [permissionResponse, requestPermission] = Audio.usePermissions();
-  const [metering, setMetering] = useState<number>(-160);
-  
-  // estado para bloquear el boton mientras el telefono "piensa"
-  const [isProcessing, setIsProcessing] = useState(false); 
+  const [metering, setMetering]                 = useState<number>(-160);
+  const [isProcessing, setIsProcessing]         = useState(false);
 
   useEffect(() => {
     return () => {
       if (recording) {
         // Un catch silencioso por si la app se cierra de golpe
-        recording.stopAndUnloadAsync().catch(() => {}); 
+        recording.stopAndUnloadAsync().catch(() => {});
       }
     };
   }, [recording]);
 
+  // Cuando el modo conducción se activa/desactiva, arranca o detiene el sensor
+  useEffect(() => {
+    if (drivingMode) {
+      startRecording();
+    } else {
+      stopRecording();
+    }
+  }, [drivingMode]);
+
   async function startRecording() {
-    if (isProcessing) return; // Si ya esta cargando, ignora clics extra
+    if (isProcessing || recording) return;
     setIsProcessing(true);
-    
     try {
       if (permissionResponse?.status !== 'granted') {
-        console.log('Solicitando permiso para el microfono.');
         await requestPermission();
       }
-
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
-      });
-
-      console.log('Iniciando grabacion.');
+      await Audio.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
       const { recording: newRecording } = await Audio.Recording.createAsync(
         Audio.RecordingOptionsPresets.HIGH_QUALITY,
         (status) => {
-          if (status.isRecording && status.metering) {
-            setMetering(status.metering);
-          }
+          if (status.isRecording && status.metering) setMetering(status.metering);
         },
         100
       );
-
       setRecording(newRecording);
-      console.log('Grabacion iniciada correctamente');
     } catch (err) {
       console.error('Fallo al iniciar la grabacion', err);
     } finally {
-      setIsProcessing(false); // Liberar el boton
+      setIsProcessing(false);
     }
   }
 
   async function stopRecording() {
     if (!recording || isProcessing) return;
     setIsProcessing(true);
-    console.log('Deteniendo grabación...');
-    
     try {
       const currentRecording = recording; // Guardamos la referencia
-      setRecording(null); // Actualizamos la UI inmediatamente a verde
-      
+      setRecording(null);                 // Actualizamos la UI inmediatamente
       await currentRecording.stopAndUnloadAsync();
       await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
-      
-      console.log('Grabacion detenida');
     } catch (error) {
       console.log('Ignorado: El sensor ya estaba detenido', error);
     } finally {
@@ -75,38 +97,74 @@ export function AcousticSensor() {
     }
   }
 
-  const volumePercentage = Math.max(0, 100 + metering);
+  const superficie  = clasificarSuperficie(metering);
+  const dotColor    = getDotColor(superficie, theme);
 
   return (
+    // Todo en una sola fila horizontal para ocupar el mínimo espacio posible
     <View style={styles.container}>
-      <Text style={styles.title}>Sensor Acústico (Pavimento)</Text>
-      
-      <View style={styles.meterContainer}>
-        <Text style={styles.meterText}>Nivel de Ruido: {metering.toFixed(2)} dB</Text>
-        <View style={styles.barBackground}>
-          <View style={[styles.barFill, { width: `${volumePercentage}%` }]} />
-        </View>
-      </View>
 
-      {/* Si esta procesando, muestra un icono de carga. Si no, muestra el boton */}
+      {/* Punto de color según la superficie detectada */}
+      <View style={[styles.dot, { backgroundColor: dotColor }]} />
+
+      {/* Etiqueta fija */}
+      <Text style={styles.title}>Acústico</Text>
+
+      {/* Separador visual */}
+      <View style={styles.divider} />
+
+      {/* Tipo de superficie detectado — ocupa el espacio sobrante */}
+      <Text style={[styles.superficie, { color: dotColor }]} numberOfLines={1}>
+        {superficie}
+      </Text>
+
+      {/* Valor dB en el extremo derecho */}
       {isProcessing ? (
-        <ActivityIndicator size="large" color="#3498db" />
+        <ActivityIndicator size="small" color={theme.colors.primary} />
       ) : (
-        <Button
-          title={recording ? 'Detener Analisis' : 'Iniciar Analisis de Ruido'}
-          onPress={recording ? stopRecording : startRecording}
-          color={recording ? 'red' : 'green'}
-        />
+        <Text style={styles.dbText}>{metering.toFixed(1)} dB</Text>
       )}
+
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { padding: 15, backgroundColor: '#fff', borderRadius: 10, marginVertical: 10, width: '100%', elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
-  title: { fontSize: 18, fontWeight: 'bold', marginBottom: 10, textAlign: 'center', color: '#333' },
-  meterContainer: { marginVertical: 15 },
-  meterText: { fontSize: 16, marginBottom: 5, color: '#555' },
-  barBackground: { height: 20, backgroundColor: '#eee', borderRadius: 10, overflow: 'hidden' },
-  barFill: { height: '100%', backgroundColor: '#3498db' },
-});
+const makeStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      flexDirection:     'row',
+      alignItems:        'center',
+      paddingHorizontal: theme.spacing[4],
+      paddingVertical:   theme.spacing[3.5],
+      backgroundColor:   theme.colors.surface,
+      borderRadius:      theme.borderRadius.md,
+      borderWidth:       1,
+      borderColor:       theme.colors.border,
+      gap:               theme.spacing[3],
+      ...theme.shadows.sm,
+    },
+    dot: {
+      width:        10,
+      height:       10,
+      borderRadius: 5,
+    },
+    title: {
+      ...theme.typography.styles.label,
+      color: theme.colors.textSecondary,
+    },
+    divider: {
+      width:           1,
+      height:          14,
+      backgroundColor: theme.colors.divider,
+    },
+    superficie: {
+      flex: 1,   // Ocupa el espacio sobrante entre el separador y el dB
+      ...theme.typography.styles.label,
+      fontWeight: '600',
+    },
+    dbText: {
+      ...theme.typography.styles.captionMedium,
+      color:       theme.colors.textSecondary,
+      fontVariant: ['tabular-nums'],
+    },
+  });
