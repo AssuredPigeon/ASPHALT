@@ -1,15 +1,22 @@
+import * as Location from 'expo-location'; // Importamos el tipo de dato
 import React from 'react';
 import { ScrollView, StyleSheet, Text } from 'react-native';
 import { AcousticSensor } from './AcousticSensor';
 import { SensorModule } from './SensorModule';
 
-export function SensorManager() {
+// Le decimos que va a recibir la ubicación
+interface SensorManagerProps {
+  location: Location.LocationObject | null;
+}
+
+export function SensorManager({ location }: SensorManagerProps) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.header}>Panel de Sensores ASPHALT</Text>
       
-      {/* Aqui se llaman los sensores */}
-      <SensorModule />
+      {/* Le pasamos la ubicación a tu sensor para que calcule la velocidad */}
+      <SensorModule location={location} />
+      
       <AcousticSensor />
       
     </ScrollView>
@@ -25,7 +32,7 @@ const styles = StyleSheet.create({
   content: {
     padding: 15,
     alignItems: 'center',
-    paddingBottom: 40, // Espacio al final para que no se corte al hacer scroll
+    paddingBottom: 40,
   },
   header: {
     fontSize: 22,

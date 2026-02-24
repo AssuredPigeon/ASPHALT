@@ -1,4 +1,5 @@
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 type Props = {
@@ -6,13 +7,14 @@ type Props = {
 };
 
 export default function GuestButton({ onPress }: Props) {
-  const router = useRouter();
+  const router = useRouter(); // Hook
+  const { t } = useTranslation();
 
   const handlePress = () => {
     if (onPress) {
-      onPress();
+      onPress(); // Ejecuta
     } else {
-      router.replace('/(tabs)');
+      router.replace('/(tabs)'); // Navega
     }
   };
 
@@ -23,7 +25,7 @@ export default function GuestButton({ onPress }: Props) {
           source={require('../../assets/icons/user.png')}
           style={styles.icon}
         />
-        <Text style={styles.text}>Invitado</Text>
+        <Text style={styles.text}>{t('guest.button')}</Text>
       </View>
     </Pressable>
   );

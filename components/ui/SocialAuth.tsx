@@ -1,12 +1,39 @@
+import * as Google from "expo-auth-session/providers/google";
+import * as WebBrowser from "expo-web-browser";
+import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
-export default function SocialAuth() {
+WebBrowser.maybeCompleteAuthSession();
+
+// label es opcional: si no se pasa, usa la traducción por defecto
+export default function SocialAuth({ label }: { label?: string }) {
+  const { t } = useTranslation();
+
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID!,
+    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID!,
+    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID!,
+  });
+
+  useEffect(() => {
+    if (response?.type === "success") {
+      const { authentication } = response;
+      console.log("TOKEN:", authentication);
+    }
+  }, [response]);
+
   return (
     <>
-      <Text style={styles.divider}>O regístrate con</Text>
+      {/* Si viene prop la usa, si no usa la traducción */}
+      <Text style={styles.divider}>{label ?? t('socialAuth.label')}</Text>
 
       <View style={styles.row}>
-        <Pressable style={styles.social}>
+        <Pressable
+          style={styles.social}
+          disabled={!request}
+          onPress={() => promptAsync()}
+        >
           <Image
             source={require('../../assets/icons/logo_google.png')}
             style={styles.icon}
@@ -23,6 +50,7 @@ export default function SocialAuth() {
     </>
   );
 }
+
 
 const styles = StyleSheet.create({
   divider: {

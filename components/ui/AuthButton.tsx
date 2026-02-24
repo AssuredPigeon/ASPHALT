@@ -1,8 +1,8 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
 
 type Props = {
-  label: string;
-  onPress?: () => void;
+  label: string; // mostrará el texto
+  onPress?: () => void; 
 };
 
 export default function AuthButton({ label, onPress }: Props) {

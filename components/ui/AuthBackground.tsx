@@ -12,8 +12,8 @@ export default function AuthBackground() {
 
 const styles = StyleSheet.create({
   circle: {
-    position: 'absolute',
-    borderRadius: 999,
+    position: 'absolute', // posición libre
+    borderRadius: 999, // los hace perfecto
     borderWidth: 1,
     borderColor: 'rgba(59,130,246,0.3)',
   },

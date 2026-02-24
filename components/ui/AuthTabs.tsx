@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 //{/* Pressable: manejo de estados (lo mejorcito) */}
 type Props = {
@@ -11,6 +12,8 @@ export default function AuthTabs({
   onLoginPress,
   onRegisterPress,
 }: Props) {
+  const { t } = useTranslation();
+
   return (
     <View style={styles.wrapper}>
       <View style={styles.container}>
@@ -19,7 +22,7 @@ export default function AuthTabs({
           onPress={onLoginPress}
         >
           <Text style={[styles.text, active === 'login' && styles.activeText]}>
-            Inicio Sesión
+            {t('authTabs.login')}
           </Text>
         </Pressable>
 
@@ -28,7 +31,7 @@ export default function AuthTabs({
           onPress={onRegisterPress}
         >
           <Text style={[styles.text, active === 'register' && styles.activeText]}>
-            Registro
+            {t('authTabs.register')}
           </Text>
         </Pressable>
       </View>
@@ -37,6 +40,7 @@ export default function AuthTabs({
 }
 
 const styles = StyleSheet.create({
+  // Espaciado bottom
   wrapper: {
     marginBottom: 20,
   },
