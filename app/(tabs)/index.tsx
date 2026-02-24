@@ -1,7 +1,7 @@
 import AsphaltMap, { AsphaltMapHandle } from '@/components/map/AsphaltMap';
 import SearchBar from '@/components/map/SearchBar';
 import SearchModal from '@/components/map/SearchModal';
-import { SensorModule } from '@/components/SensorModule';
+import { SensorManager } from '@/components/Sensor/SensorManager';
 import * as Location from 'expo-location';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -60,8 +60,9 @@ export default function HomeScreen() {
 
       <SearchBar onActivate={handleSearchActive} />
 
+      {/* Aquí usamos el estilo del equipo, pero con tu SensorManager */}
       <View style={styles.overlay}>
-        <SensorModule location={location} />
+        <SensorManager location={location} />
       </View>
 
       <SearchModal
@@ -85,5 +86,6 @@ const styles = StyleSheet.create({
     right:             0,
     paddingHorizontal: 10,
     paddingBottom:     20,
+    zIndex:            10,
   },
 });

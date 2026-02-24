@@ -1,7 +1,7 @@
 import AsphaltMap from '@/components/map/AsphaltMap';
 import SearchBar from '@/components/map/SearchBar';
 import SearchModal from '@/components/map/SearchModal';
-import { SensorModule } from '@/components/SensorModule';
+import { SensorManager } from '@/components/Sensor/SensorManager';
 import * as Location from 'expo-location';
 import { useEffect, useRef, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
@@ -46,7 +46,7 @@ export default function HomeScreen() {
             <AsphaltMap location={location} />
             <SearchBar onActivate={handleSearchActive} />
             <View style={styles.overlay}>
-                <SensorModule location={location} />
+                <SensorManager location={location} />
             </View>
             <SearchModal
                 visible={modalVisible}
