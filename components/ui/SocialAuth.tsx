@@ -1,3 +1,4 @@
+import { lightTheme } from '@/theme/light';
 import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
 import { useEffect } from "react";
@@ -6,13 +7,15 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 WebBrowser.maybeCompleteAuthSession();
 
+const { colors } = lightTheme;
+
 // label es opcional: si no se pasa, usa la traducción por defecto
 export default function SocialAuth({ label }: { label?: string }) {
   const { t } = useTranslation();
 
   const [request, response, promptAsync] = Google.useAuthRequest({
-    webClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID!,
-    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID!,
+    webClientId:     process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID!,
+    iosClientId:     process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID!,
     androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID!,
   });
 
@@ -51,30 +54,30 @@ export default function SocialAuth({ label }: { label?: string }) {
   );
 }
 
-
 const styles = StyleSheet.create({
   divider: {
     marginVertical: 16,
-    textAlign: 'center',
-    fontSize: 12,
-    color: '#9CA3AF',
+    textAlign:      'center',
+    fontSize:       12,
+    color:          colors.textTertiary,
   },
   row: {
     flexDirection: 'row',
-    gap: 12,
+    gap:           12,
   },
   social: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 12,
+    flex:            1,
+    borderWidth:     1,
+    borderColor:     colors.border,
+    borderRadius:    12,
     paddingVertical: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems:      'center',
+    justifyContent:  'center',
+    backgroundColor: colors.surface,
   },
   icon: {
-    width: 22,
-    height: 22,
+    width:      22,
+    height:     22,
     resizeMode: 'contain',
   },
 });

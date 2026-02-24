@@ -1,3 +1,4 @@
+import { lightTheme } from '@/theme/light';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 //{/* Pressable: manejo de estados (lo mejorcito) */}
@@ -7,11 +8,9 @@ type Props = {
   onRegisterPress?: () => void;
 };
 
-export default function AuthTabs({
-  active,
-  onLoginPress,
-  onRegisterPress,
-}: Props) {
+const { colors } = lightTheme;
+
+export default function AuthTabs({ active, onLoginPress, onRegisterPress }: Props) {
   const { t } = useTranslation();
 
   return (
@@ -45,26 +44,26 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   container: {
-    flexDirection: 'row',
-    backgroundColor: '#E5E7EB',
-    borderRadius: 30,
-    padding: 4,
+    flexDirection:   'row',
+    backgroundColor: colors.backgroundSecondary,
+    borderRadius:    30,
+    padding:         4,
   },
   tab: {
-    flex: 1,
+    flex:            1,
     paddingVertical: 10,
-    borderRadius: 25,
-    alignItems: 'center',
+    borderRadius:    25,
+    alignItems:      'center',
   },
   activeTab: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
   },
   text: {
-    color: '#9CA3AF',
+    color:    colors.textTertiary,
     fontSize: 14,
   },
   activeText: {
-    color: '#111827',
+    color:      colors.text,
     fontWeight: '600',
   },
 });
