@@ -6,7 +6,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 
-// Kalman Filter 
+// Kalman Filter
 // Rastrea la LÍNEA BASE (gravedad normal) para detectar desviaciones.
 class KalmanFilter {
   private Q: number;
@@ -34,62 +34,43 @@ class KalmanFilter {
 // R alto → no confía demasiado en cada lectura individual
 const kalmanBaseline = new KalmanFilter(0.005, 1.5, 1.0);
 
-//  Tipos de severidad 
+// Tipos de severidad
 type Severidad = 'Ninguna' | 'Leve' | 'Moderado' | 'Severo';
 
 interface SensorProps {
   location: Location.LocationObject | null;
 }
 
-//  Colores por severidad usando tokens del tema 
-const getSeverityStyles = (level: Severidad, theme: AppTheme) => {
+// Color del punto de estado según severidad
+const getDotColor = (level: Severidad, theme: AppTheme) => {
   switch (level) {
-    case 'Severo':
-      return {
-        backgroundColor: theme.colors.errorMuted,
-        borderColor:     theme.colors.error,
-        borderWidth:     2,
-      };
-    case 'Moderado':
-      return {
-        backgroundColor: theme.colors.warningMuted,
-        borderColor:     theme.colors.warning,
-        borderWidth:     2,
-      };
-    case 'Leve':
-      return {
-        backgroundColor: theme.colors.successMuted,
-        borderColor:     theme.colors.success,
-        borderWidth:     1,
-      };
-    default:
-      return {
-        backgroundColor: theme.colors.surface,
-        borderWidth:     0,
-      };
+    case 'Severo':   return theme.colors.error;
+    case 'Moderado': return theme.colors.warning;
+    case 'Leve':     return theme.colors.success;
+    default:         return theme.colors.textSecondary;
   }
 };
 
-//  Componente 
+// Componente
 export function SensorModule({ location }: SensorProps) {
   const { theme } = useTheme();
   const styles    = makeStyles(theme);
   const { t }     = useTranslation();
 
-  const [{ x, y, z }, setData]     = useState({ x: 0, y: 0, z: 0 });
-  const [anomalia,    setAnomalia]  = useState(0);
+  const [{ x, y, z }, setData]          = useState({ x: 0, y: 0, z: 0 });
+  const [anomalia,    setAnomalia]       = useState(0);
   const [subscription, setSubscription] = useState<any>(null);
-  const [velocidad,   setVelocidad] = useState(0);
-  const [mensaje,     setMensaje]   = useState<string>('scanning');
-  const [severidad,   setSeveridad] = useState<Severidad>('Ninguna');
+  const [velocidad,   setVelocidad]     = useState(0);
+  const [mensaje,     setMensaje]       = useState<string>('scanning');
+  const [severidad,   setSeveridad]     = useState<Severidad>('Ninguna');
 
-  const resetTimer    = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const resetTimer   = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   {/* Usamos refs para leer el estado ACTUAL dentro del callback del acelerómetro.
    Sin esto, severidad y velocidad siempre valdrían su valor inicial ("Ninguna", 0)
    porque el listener se registra una sola vez y captura el closure de ese momento. */}
-  const severidadRef  = useRef<Severidad>('Ninguna');
-  const velocidadRef  = useRef(0);
+  const severidadRef = useRef<Severidad>('Ninguna');
+  const velocidadRef = useRef(0);
 
   // Mantener refs sincronizadas con estado
   useEffect(() => { severidadRef.current = severidad; }, [severidad]);
@@ -111,13 +92,13 @@ export function SensorModule({ location }: SensorProps) {
 
         // Magnitud total del vector G (intensidad del movimiento)
         const rawForce = Math.sqrt(data.x ** 2 + data.y ** 2 + data.z ** 2);
-        {/* 
+        {/*
          La línea base sigue la "normalidad" (≈1.0G en reposo o carretera lisa).
          Como Q es bajo y R es alto, el filtro se mueve LENTO y no persigue los picos.*/}
         const baseline = kalmanBaseline.filter(rawForce);
 
         // Ej: rawForce=1.8G, baseline=1.02G → anomalia=0.78G → bache moderado.
-        const delta    = rawForce - baseline;
+        const delta            = rawForce - baseline;
         const anomaliaPositiva = Math.max(0, delta);
 
         setAnomalia(anomaliaPositiva);
@@ -174,33 +155,22 @@ export function SensorModule({ location }: SensorProps) {
     return () => _unsubscribe();
   }, []);
 
-  const severityStyles = getSeverityStyles(severidad, theme);
-
   return (
+    // Todo en una sola fila horizontal para ocupar el mínimo espacio posible
     <View style={styles.container}>
 
-      {/* Panel de velocidad */}
-      <View style={styles.speedPanel}>
-        <Text style={styles.speedLabel}>{t('sensor.speedLabel')}</Text>
-        <Text style={styles.speedValue}>{velocidad.toFixed(1)} km/h</Text>
-      </View>
+      {/* Punto de color que indica la severidad actual */}
+      <View style={[styles.dot, { backgroundColor: getDotColor(severidad, theme) }]} />
 
-      {/* Tarjeta de estado */}
-      <View style={[styles.card, severityStyles]}>
-        <Text style={styles.cardLabel}>{t('sensor.roadStatus')}</Text>
-        <Text style={[
-          styles.statusText,
-          severidad === 'Severo'   && { color: theme.colors.error   },
-          severidad === 'Moderado' && { color: theme.colors.warning  },
-          severidad === 'Leve'     && { color: theme.colors.success  },
-          severidad === 'Ninguna'  && { color: theme.colors.text     },
-        ]}>
-          {t(`sensor.${mensaje}`)}
-        </Text>
-        <Text style={styles.forceText}>
-          {t('sensor.anomaly')} +{anomalia.toFixed(3)}
-        </Text>
-      </View>
+      {/* Velocidad compacta */}
+      <Text style={styles.speed}>{velocidad.toFixed(1)} <Text style={styles.unit}>km/h</Text></Text>
+
+      {/* Separador visual */}
+      <View style={styles.divider} />
+
+      {/* Estado del camino + anomalía G */}
+      <Text style={styles.status} numberOfLines={1}>{t(`sensor.${mensaje}`)}</Text>
+      <Text style={styles.anomaly}>+{anomalia.toFixed(2)}G</Text>
 
     </View>
   );
@@ -209,49 +179,44 @@ export function SensorModule({ location }: SensorProps) {
 const makeStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {
-      padding:         theme.spacing[2.5],
-      backgroundColor: theme.colors.surface,
-      borderRadius:    theme.borderRadius.md,
-      marginVertical:  theme.spacing[2.5],
-      width:           '100%',
-      borderWidth:     1,
-      borderColor:     theme.colors.border,
-      ...theme.shadows.lg,
+      flexDirection:     'row',       // Una sola fila horizontal
+      alignItems:        'center',
+      paddingHorizontal: theme.spacing[4],
+      paddingVertical:   theme.spacing[3.5], // Más cuerpo vertical
+      backgroundColor:   theme.colors.surface,
+      borderRadius:      theme.borderRadius.md,
+      borderWidth:       1,
+      borderColor:       theme.colors.border,
+      gap:               theme.spacing[3],
+      ...theme.shadows.sm,
     },
-    speedPanel: {
-      alignItems:    'center',
-      marginBottom:  theme.spacing[2.5],
-      paddingBottom: theme.spacing[2.5],
-      borderBottomWidth: 1,
-      borderBottomColor: theme.colors.divider,
+    dot: {
+      width:        10,
+      height:       10,
+      borderRadius: 5, // Círculo de estado: gris=ok, verde=leve, naranja=moderado, rojo=severo
     },
-    speedLabel: {
+    speed: {
+      ...theme.typography.styles.h3,  // Más grande que label
+      color:       theme.colors.text,
+      fontVariant: ['tabular-nums'],
+    },
+    unit: {
       ...theme.typography.styles.label,
       color: theme.colors.textSecondary,
     },
-    speedValue: {
-      ...theme.typography.styles.h2,
-      color: theme.colors.text,
+    divider: {
+      width:           1,
+      height:          18,
+      backgroundColor: theme.colors.divider,
     },
-    card: {
-      padding:       theme.spacing[3.5],
-      borderRadius:  theme.borderRadius.sm,
-      alignItems:    'center',
-      marginBottom:  theme.spacing[2.5],
-      ...theme.shadows.sm,
-    },
-    cardLabel: {
+    status: {
+      flex:    1,       // Ocupa el espacio sobrante
       ...theme.typography.styles.label,
-      color:        theme.colors.textSecondary,
-      marginBottom: theme.spacing[1],
+      color:   theme.colors.textSecondary,
     },
-    statusText: {
-      ...theme.typography.styles.h3,
-      marginBottom: theme.spacing[1],
-      textAlign:    'center',
-    },
-    forceText: {
-      ...theme.typography.styles.captionMedium,
-      color: theme.colors.primary,
+    anomaly: {
+      ...theme.typography.styles.label,
+      color:       theme.colors.primary,
+      fontVariant: ['tabular-nums'],
     },
   });

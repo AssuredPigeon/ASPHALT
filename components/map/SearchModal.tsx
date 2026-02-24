@@ -68,11 +68,27 @@ export default function SearchModal({ visible, onClose, onSelectLocation, locati
     if (text.length < 3) { setResults([]); return; }
     setLoading(true);
     try {
-      const res  = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(text)}&format=json&addressdetails=1&limit=10`);
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(text)}&format=json&addressdetails=1&limit=10`,
+        {
+          headers: {
+            'User-Agent': 'AsphaltApp/1.0', // Identicar quién eres
+            'Accept':     'application/json', // Output JSON, no HTML
+          },
+        }
+      );
+
+      if (!res.ok) { // Errores: Si no va, se limpia y prosigue
+        console.warn(`Nominatim error: ${res.status}`);
+        setResults([]);
+        return;
+      }
+
       const data = await res.json();
       setResults(data);
     } catch (e) {
       console.log('Error buscando ubicación:', e);
+      setResults([]);
     } finally {
       setLoading(false);
     }
@@ -239,8 +255,6 @@ const makeStyles = (theme: AppTheme) =>
       paddingHorizontal:    theme.spacing.screenH,
       paddingTop:           theme.spacing[3.5],
     },
-
-    // Barra
     header: {
       flexDirection:     'row',
       alignItems:        'center',
@@ -266,8 +280,6 @@ const makeStyles = (theme: AppTheme) =>
       marginLeft:      theme.spacing.sm,
       paddingVertical: theme.spacing[2.5],
     },
-
-    // Resultados
     resultItem: {
       flexDirection:     'row',
       alignItems:        'center',
@@ -289,8 +301,6 @@ const makeStyles = (theme: AppTheme) =>
       ...theme.typography.styles.caption,
       color: theme.colors.text,
     },
-
-    // Secciones
     sectionHeader: {
       flexDirection:  'row',
       justifyContent: 'space-between',
@@ -314,8 +324,6 @@ const makeStyles = (theme: AppTheme) =>
       textAlign: 'center',
       marginTop: theme.spacing.lg,
     },
-
-    // Chips de categoría
     categoryItem: {
       flexDirection:     'row',
       alignItems:        'center',
