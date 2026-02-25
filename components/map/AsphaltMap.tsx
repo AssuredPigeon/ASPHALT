@@ -4,20 +4,33 @@ import { useTheme } from '@/theme';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LocationObject } from 'expo-location';
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableWithoutFeedback,
+  View,
+} from 'react-native';
 import MapView, { Region } from 'react-native-maps';
 
+import { useMapSettings } from '../../app/MapSettingsContext';
 import StreetQualityLayer, { CalleEstado } from './StreetQualityLayer';
 
+// Define la forma
 export type AsphaltMapHandle = {
   navigateTo: (lat: number, lon: number) => void;
 };
 
+// Tendrá esos parámetros
 interface Props {
   location: LocationObject | null;
 }
 
+// Función que devuelve arreglo con info de calles
 async function fetchStreetsFromAPI(region: Region): Promise<CalleEstado[]> {
+  // Limites del mapa
   const south = region.latitude - region.latitudeDelta / 2;
   const north = region.latitude + region.latitudeDelta / 2;
   const west = region.longitude - region.longitudeDelta / 2;
@@ -30,9 +43,13 @@ async function fetchStreetsFromAPI(region: Region): Promise<CalleEstado[]> {
   return data.calles;  // Ya viene en el formato que espera StreetQualityLayer
 }
 
+// Tipo de capa activa del menú flotante
+// "none"    sin ninguna capa activada
+// "heatmap" muestra el mapa de calor de calidad vial
+// "3d"      inclina la cámara para mostrar edificios en perspectiva
+type LayerMode = 'none' | 'heatmap' | '3d';
 
-// Leyenda 
-
+// Leyenda
 const LEYENDA = [
   { color: 'rgba(50,  220, 90,  0.85)', label: 'Bueno (76–100)' },
   { color: 'rgba(245, 205, 30,  0.85)', label: 'Regular (51–75)' },
@@ -40,27 +57,47 @@ const LEYENDA = [
   { color: 'rgba(255, 90,  90,  0.95)', label: 'Crítico (0–25)' },
 ];
 
-// Componente 
-
+// Componente que recibe un prop y se controla mediante ref
 const AsphaltMap = forwardRef<AsphaltMapHandle, Props>(({ location }, ref) => {
   const { theme, isDark } = useTheme();
   const styles = makeStyles(theme, isDark);
 
-  const mapRef = useRef<MapView>(null);
-  const lastLocationRef = useRef<LocationObject | null>(null);
-  const regionRef = useRef<Region | null>(null);
-  const cacheRef = useRef<Map<string, CalleEstado[]>>(new Map());
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Lee la preferencia de vista del contexto compartido con Settings
+  const { mapView, setMapView } = useMapSettings();
 
-  const [followUser, setFollowUser] = useState(true);
-  const [heatmapVisible, setHeatmapVisible] = useState(false);
-  const [calles, setCalles] = useState<CalleEstado[]>([]);
-  const [loading, setLoading] = useState(false);
+  const mapRef = useRef<MapView>(null); // Guarda ref y es null de momento
+  const lastLocationRef = useRef<LocationObject | null>(null); // Guarda la última locación conocida y es null de momento
+  const regionRef = useRef<Region | null>(null); // Guarda la región actual visible y es null de momento
+  const cacheRef = useRef<Map<string, CalleEstado[]>>(new Map()); 
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null); 
+
+  const [followUser, setFollowUser] = useState(true);  // Controla si sigue al usuario o no
+  const [menuOpen, setMenuOpen] = useState(false);  // controla visibilidad del menú de capas
+  const [activeLayer, setActiveLayer] = useState<LayerMode>('none'); // define la capa activa
+  const [calles, setCalles] = useState<CalleEstado[]>([]); // Calles que se mostrarán
+  const [loading, setLoading] = useState(false); // UI de carga
+
+  // Derivados para hacer el JSX más legible
+  const heatmapVisible = activeLayer === 'heatmap';
+  const is3D = activeLayer === '3d';
+
+  // Reacciona al cambio de mapView desde Settings.
+  useEffect(() => {
+    if (mapView === '3d') {
+      // Settings activó 3D = reflejarlo en el menú del mapa también
+      setActiveLayer('3d');
+      mapRef.current?.animateCamera({ pitch: 75, altitude: 400 }, { duration: 900 });
+    } else {
+      // Settings activó 2D = limpiar el 3D del menú y aplanar cámara
+      if (activeLayer === '3d') setActiveLayer('none');
+      mapRef.current?.animateCamera({ pitch: 0, altitude: 1500 }, { duration: 600 });
+    }
+  }, [mapView]);
 
   // Fetch geometría desde el backend
   const loadStreets = async (region: Region) => {
     console.log('[Heatmap] loadStreets llamado, location:', location ? 'SÍ' : 'NULL');
-    // Usar ubicación del usuario como centro (radio ~1km)
+
     const center = location ? {
       lat: location.coords.latitude,
       lng: location.coords.longitude,
@@ -86,9 +123,7 @@ const AsphaltMap = forwardRef<AsphaltMapHandle, Props>(({ location }, ref) => {
 
     setLoading(true);
     try {
-      //console.log('[Heatmap] Llamando API con:', JSON.stringify({ south: fixedRegion.latitude - fixedRegion.latitudeDelta / 2, north: fixedRegion.latitude + fixedRegion.latitudeDelta / 2 }));
       const data = await fetchStreetsFromAPI(fixedRegion);
-      //console.log('[Heatmap] Calles recibidas:', data.length);
       cacheRef.current.set(key, data);
       setCalles(data);
     } catch (e) {
@@ -100,7 +135,6 @@ const AsphaltMap = forwardRef<AsphaltMapHandle, Props>(({ location }, ref) => {
 
   // Al activar heatmap, cargar de inmediato
   useEffect(() => {
-    //console.log('[Heatmap] useEffect - visible:', heatmapVisible, 'location:', location ? 'SÍ' : 'NULL');
     if (heatmapVisible && location) {
       const region: Region = {
         latitude: location.coords.latitude,
@@ -121,7 +155,50 @@ const AsphaltMap = forwardRef<AsphaltMapHandle, Props>(({ location }, ref) => {
     debounceRef.current = setTimeout(() => loadStreets(region), 1000);
   };
 
-  // Imperative handle 
+  // Vista 3D: pitch 75 grados para ver los edificios en perspectiva pronunciada.
+  // altitude 400 acerca la cámara para que los edificios sean más notorios.
+  const enter3D = () => {
+    mapRef.current?.animateCamera(
+      { pitch: 75, altitude: 400 },
+      { duration: 900 }
+    );
+  };
+
+  // Al salir del 3D se restablece pitch 0 para volver a la vista aérea plana.
+  // Si Settings tiene el 3D activo, se respeta y no se aplana.
+  const exit3D = () => {
+    const targetPitch = mapView === '3d' ? 75 : 0;
+    const targetAltitude = mapView === '3d' ? 400 : 1500;
+    mapRef.current?.animateCamera(
+      { pitch: targetPitch, altitude: targetAltitude },
+      { duration: 600 }
+    );
+  };
+
+  // Selección de capa desde el menú flotante.
+  // Si el usuario toca la capa que ya está activa, la desactiva.
+  const selectLayer = (mode: LayerMode) => {
+    setMenuOpen(false);
+
+    if (activeLayer === mode) {
+      if (mode === '3d') {
+        exit3D();
+        setMapView('2d');   // sincroniza contexto y Settings se entera
+      }
+      setActiveLayer('none');
+      return;
+    }
+
+    if (activeLayer === '3d') exit3D();
+
+    setActiveLayer(mode);
+    if (mode === '3d') {
+      enter3D();
+      setMapView('3d'); // sincroniza contexto y Settings se entera
+    }
+  };
+
+  // Imperative handle
   useImperativeHandle(ref, () => ({
     navigateTo: (lat: number, lon: number) => {
       setFollowUser(false);
@@ -132,7 +209,7 @@ const AsphaltMap = forwardRef<AsphaltMapHandle, Props>(({ location }, ref) => {
     },
   }));
 
-  // Map styles 
+  // Map styles
   const lightMapStyle = [
     { elementType: 'geometry', stylers: [{ color: '#f5f5f5' }] },
     { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#ffffff' }] },
@@ -145,7 +222,7 @@ const AsphaltMap = forwardRef<AsphaltMapHandle, Props>(({ location }, ref) => {
     { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#1e3a5f' }] },
   ];
 
-  // Seguimiento GPS 
+  // Seguimiento GPS
   const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
     const R = 6371000, r = (v: number) => v * Math.PI / 180;
     const dLat = r(lat2 - lat1), dLon = r(lon2 - lon1);
@@ -176,7 +253,9 @@ const AsphaltMap = forwardRef<AsphaltMapHandle, Props>(({ location }, ref) => {
     mapRef.current?.animateToRegion(getRegion(location), 500);
   };
   const handleUserPan = () => setFollowUser(false);
-  const toggleHeatmap = () => setHeatmapVisible(p => !p);
+
+  // El mapa está en 3D si el menú del mapa lo activó O si Settings lo tiene en '3d'
+  const mapIs3D = is3D || mapView === '3d';
 
   return (
     <>
@@ -187,6 +266,7 @@ const AsphaltMap = forwardRef<AsphaltMapHandle, Props>(({ location }, ref) => {
         {...(Platform.OS === 'android' && { customMapStyle: isDark ? darkMapStyle : lightMapStyle })}
         showsUserLocation
         showsMyLocationButton={false}
+        showsBuildings       // habilita edificios 3D nativos del mapa
         rotateEnabled
         pitchEnabled
         showsCompass
@@ -198,7 +278,14 @@ const AsphaltMap = forwardRef<AsphaltMapHandle, Props>(({ location }, ref) => {
         <StreetQualityLayer calles={calles} visible={heatmapVisible} />
       </MapView>
 
-      {/* Spinner mientras carga Overpass */}
+      {/* Capa transparente que cierra el menú al tocar fuera de él */}
+      {menuOpen && (
+        <TouchableWithoutFeedback onPress={() => setMenuOpen(false)}>
+          <View style={StyleSheet.absoluteFillObject} />
+        </TouchableWithoutFeedback>
+      )}
+
+      {/* Spinner mientras carga la API */}
       {heatmapVisible && loading && (
         <View style={styles.loadingBadge}>
           <ActivityIndicator size="small" color={theme.colors.primary} />
@@ -218,23 +305,78 @@ const AsphaltMap = forwardRef<AsphaltMapHandle, Props>(({ location }, ref) => {
         />
       </Pressable>
 
-      {/* Heatmap toggle */}
+      {/* Menú flotante de capas, aparece a la izquierda del botón layers */}
+      {menuOpen && (
+        <View style={styles.layerMenu}>
+
+          <Pressable
+            onPress={() => selectLayer('heatmap')}
+            style={({ pressed }) => [
+              styles.menuItem,
+              heatmapVisible && styles.menuItemActive,
+              pressed && styles.menuItemPressed,
+            ]}
+          >
+            <View style={[styles.menuIcon, heatmapVisible && styles.menuIconActive]}>
+              <MaterialIcons
+                name="whatshot"
+                size={18}
+                color={heatmapVisible ? theme.colors.primary : theme.colors.textSecondary}
+              />
+            </View>
+            <Text style={[styles.menuLabel, heatmapVisible && styles.menuLabelActive]}>
+              Mapa de calor
+            </Text>
+            {heatmapVisible && (
+              <MaterialIcons name="check" size={14} color={theme.colors.primary} />
+            )}
+          </Pressable>
+
+          <View style={styles.menuDivider} />
+
+          <Pressable
+            onPress={() => selectLayer('3d')}
+            style={({ pressed }) => [
+              styles.menuItem,
+              is3D && styles.menuItemActive,
+              pressed && styles.menuItemPressed,
+            ]}
+          >
+            <View style={[styles.menuIcon, is3D && styles.menuIconActive]}>
+              <MaterialIcons
+                name="view-in-ar"
+                size={18}
+                color={is3D ? theme.colors.primary : theme.colors.textSecondary}
+              />
+            </View>
+            <Text style={[styles.menuLabel, is3D && styles.menuLabelActive]}>
+              Vista 3D
+            </Text>
+            {is3D && (
+              <MaterialIcons name="check" size={14} color={theme.colors.primary} />
+            )}
+          </Pressable>
+
+        </View>
+      )}
+
+      {/* Botón layers: abre el menú de capas. Se ilumina si hay alguna capa activa */}
       <Pressable
-        onPress={toggleHeatmap}
+        onPress={() => setMenuOpen(p => !p)}
         style={({ pressed }) => [
           styles.heatmapButton,
-          heatmapVisible && styles.heatmapButtonActive,
+          (menuOpen || activeLayer !== 'none') && styles.heatmapButtonActive,
           pressed && styles.heatmapButtonPressed,
         ]}
       >
         <MaterialIcons
           name="layers"
           size={24}
-          color={heatmapVisible ? theme.colors.primary : theme.colors.textSecondary}
+          color={(menuOpen || activeLayer !== 'none') ? theme.colors.primary : theme.colors.textSecondary}
         />
       </Pressable>
 
-      {/* Leyenda */}
+      {/* Leyenda de colores, visible solo cuando el heatmap está activo */}
       {heatmapVisible && (
         <View style={styles.legend}>
           <Text style={styles.legendTitle}>Estado de calles</Text>
@@ -246,16 +388,24 @@ const AsphaltMap = forwardRef<AsphaltMapHandle, Props>(({ location }, ref) => {
           ))}
         </View>
       )}
+
+      {/* Badge que indica que el mapa está en 3D, ya sea por el menú o por Settings */}
+      {mapIs3D && (
+        <View style={styles.badge3D}>
+          <Text style={styles.badge3DText}>3D</Text>
+        </View>
+      )}
     </>
   );
 });
 
 export default AsphaltMap;
 
-// Estilos 
+// Estilos
+const makeStyles = (theme: AppTheme, isDark: boolean) => {
+  const panel = isDark ? 'rgba(26,39,68,0.96)' : 'rgba(255,255,255,0.97)';
 
-const makeStyles = (theme: AppTheme, isDark: boolean) =>
-  StyleSheet.create({
+  return StyleSheet.create({
     gpsButton: {
       position: 'absolute', bottom: 250, right: theme.spacing.screenH,
       backgroundColor: theme.colors.surface, padding: theme.spacing[3.5],
@@ -263,6 +413,8 @@ const makeStyles = (theme: AppTheme, isDark: boolean) =>
       borderColor: theme.colors.border, ...theme.shadows.lg,
     },
     gpsButtonPressed: { backgroundColor: theme.colors.primaryMuted, borderColor: theme.colors.primaryBorder },
+
+    // Botón layers, misma posición y tamaño que el anterior heatmapButton
     heatmapButton: {
       position: 'absolute', bottom: 318, right: theme.spacing.screenH,
       backgroundColor: theme.colors.surface, padding: theme.spacing[3.5],
@@ -271,6 +423,50 @@ const makeStyles = (theme: AppTheme, isDark: boolean) =>
     },
     heatmapButtonActive: { backgroundColor: theme.colors.primaryMuted, borderColor: theme.colors.primaryBorder },
     heatmapButtonPressed: { opacity: 0.7 },
+
+    // Menú flotante que aparece a la izquierda del botón layers
+    layerMenu: {
+      position: 'absolute',
+      bottom: 318,
+      right: theme.spacing.screenH + 56,
+      backgroundColor: panel,
+      borderRadius: theme.borderRadius.lg,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      overflow: 'hidden',
+      minWidth: 175,
+      ...theme.shadows.xl,
+    },
+    menuItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: theme.spacing[3],
+      paddingHorizontal: theme.spacing[3.5],
+      gap: theme.spacing[2.5],
+    },
+    menuItemActive: { backgroundColor: theme.colors.primaryMuted },
+    menuItemPressed: { opacity: 0.7 },
+    menuIcon: {
+      width: 32, height: 32,
+      borderRadius: theme.borderRadius.sm,
+      backgroundColor: theme.colors.surfaceSecondary,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    menuIconActive: { backgroundColor: theme.colors.primaryMuted },
+    menuLabel: {
+      flex: 1,
+      fontSize: 13,
+      fontWeight: '500',
+      color: theme.colors.textSecondary,
+    },
+    menuLabelActive: { color: theme.colors.text },
+    menuDivider: {
+      height: 1,
+      backgroundColor: theme.colors.divider,
+      marginHorizontal: theme.spacing[3],
+    },
+
     loadingBadge: {
       position: 'absolute', bottom: 390, right: theme.spacing.screenH,
       backgroundColor: isDark ? 'rgba(26,39,68,0.92)' : 'rgba(255,255,255,0.94)',
@@ -279,6 +475,7 @@ const makeStyles = (theme: AppTheme, isDark: boolean) =>
       flexDirection: 'row', alignItems: 'center', gap: theme.spacing[2], ...theme.shadows.md,
     },
     loadingText: { fontSize: 11, color: theme.colors.textSecondary },
+
     legend: {
       position: 'absolute', top: 120, right: theme.spacing.screenH,
       backgroundColor: isDark ? 'rgba(26,39,68,0.92)' : 'rgba(255,255,255,0.94)',
@@ -293,4 +490,25 @@ const makeStyles = (theme: AppTheme, isDark: boolean) =>
     legendRow: { flexDirection: 'row', alignItems: 'center', marginVertical: theme.spacing[0.5] },
     legendDot: { width: 10, height: 10, borderRadius: theme.borderRadius.full, marginRight: theme.spacing[2] },
     legendLabel: { fontSize: 11, color: theme.colors.text },
+
+    // Badge pequeño que aparece cuando el mapa está en 3D
+    badge3D: {
+      position: 'absolute',
+      top: 120,
+      right: theme.spacing.screenH,
+      backgroundColor: theme.colors.primaryMuted,
+      borderRadius: theme.borderRadius.sm,
+      paddingVertical: theme.spacing[1],
+      paddingHorizontal: theme.spacing[2.5],
+      borderWidth: 1,
+      borderColor: theme.colors.primaryBorder,
+      ...theme.shadows.sm,
+    },
+    badge3DText: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: theme.colors.primary,
+      letterSpacing: 1,
+    },
   });
+};
