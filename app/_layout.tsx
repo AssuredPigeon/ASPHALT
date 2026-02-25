@@ -4,6 +4,8 @@ import '@/i18n';
 import { ThemeProvider } from "@/theme/ThemeContext";
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
+import { MapSettingsProvider } from './MapSettingsContext';
+
 
 // Inner layout — ya dentro de ThemeProvider, puede usar useTheme 
 function RootLayoutInner() {
@@ -45,7 +47,9 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <RootLayoutInner />
+        <MapSettingsProvider>
+          <RootLayoutInner />
+        </MapSettingsProvider>
       </AuthProvider>
     </ThemeProvider>
   );

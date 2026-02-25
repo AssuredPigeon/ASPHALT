@@ -8,14 +8,17 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import SettingRow from '@/components/ui/SettingRow';
 import SettingsSection from '@/components/ui/SettingsSection';
+import { useMapSettings } from './MapSettingsContext';
 
 export default function SettingsScreen() {
   const { theme } = useTheme();
   const styles = makeStyles(theme);
   const { t } = useTranslation();
 
+  // mapView viene del contexto compartido para que AsphaltMap reaccione al cambio
+  const { mapView, setMapView } = useMapSettings();
+
   const [units,       setUnits]       = useState<'mi' | 'km'>('mi');
-  const [mapView,     setMapView]     = useState<'3d' | '2d'>('3d');
   const [autoFocus,   setAutoFocus]   = useState(true);
   const [voiceVolume, setVoiceVolume] = useState(0.7);
   const [muteCalls,   setMuteCalls]   = useState(true);
@@ -23,7 +26,7 @@ export default function SettingsScreen() {
   return (
     <View style={styles.container}>
 
-      {/* ── Header ── */}
+      {/* Header */}
       <View style={styles.header}>
         <Pressable
           onPress={() => router.back()}
@@ -68,11 +71,11 @@ export default function SettingsScreen() {
             label={t('settings.mapView')}
             type="segment"
             options={[
-              { label: '3D', value: '3d' },
               { label: '2D', value: '2d' },
+              { label: '3D', value: '3d' },
             ]}
             selected={mapView}
-            onSelect={setMapView}
+            onSelect={setMapView}   // escribe directo al contexto, AsphaltMap lo lee
           />
           <View style={styles.rowDivider} />
           <SettingRow
@@ -137,8 +140,8 @@ const makeStyles = (theme: AppTheme) =>
       paddingBottom: theme.spacing['2xl'],
     },
     rowDivider: {
-      height:          1,
-      backgroundColor: theme.colors.divider,
+      height:           1,
+      backgroundColor:  theme.colors.divider,
       marginHorizontal: theme.spacing.md,
     },
   });
