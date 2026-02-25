@@ -35,9 +35,15 @@ async function fetchStreetsFromAPI(region: Region): Promise<CalleEstado[]> {
   const north = region.latitude + region.latitudeDelta / 2;
   const west = region.longitude - region.longitudeDelta / 2;
   const east = region.longitude + region.longitudeDelta / 2;
-
+  // Simplificar geometrías según el zoom (delta grande = zoom lejano)
+  const simplify = region.latitudeDelta > 0.05 ? 0.001
+    : region.latitudeDelta > 0.02 ? 0.0005
+      : 0;
+  const limit = region.latitudeDelta > 0.05 ? 150
+    : region.latitudeDelta > 0.02 ? 200
+      : 300;
   const { data } = await api.get('/api/calles/viewport', {
-    params: { south, north, west, east, limit: 200 },
+    params: { south, north, west, east, limit, simplify },
   });
 
   return data.calles;  // Ya viene en el formato que espera StreetQualityLayer
@@ -68,8 +74,8 @@ const AsphaltMap = forwardRef<AsphaltMapHandle, Props>(({ location }, ref) => {
   const mapRef = useRef<MapView>(null); // Guarda ref y es null de momento
   const lastLocationRef = useRef<LocationObject | null>(null); // Guarda la última locación conocida y es null de momento
   const regionRef = useRef<Region | null>(null); // Guarda la región actual visible y es null de momento
-  const cacheRef = useRef<Map<string, CalleEstado[]>>(new Map()); 
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null); 
+  const cacheRef = useRef<Map<string, CalleEstado[]>>(new Map());
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [followUser, setFollowUser] = useState(true);  // Controla si sigue al usuario o no
   const [menuOpen, setMenuOpen] = useState(false);  // controla visibilidad del menú de capas
@@ -96,63 +102,62 @@ const AsphaltMap = forwardRef<AsphaltMapHandle, Props>(({ location }, ref) => {
 
   // Fetch geometría desde el backend
   const loadStreets = async (region: Region) => {
-    console.log('[Heatmap] loadStreets llamado, location:', location ? 'SÍ' : 'NULL');
+    // Si el zoom es muy lejano, no cargar calles (evita lag)
+    if (region.latitudeDelta > 0.04) {
+      setCalles([]);
+      return;
+    }
 
-    const center = location ? {
-      lat: location.coords.latitude,
-      lng: location.coords.longitude,
-    } : {
-      lat: region.latitude,
-      lng: region.longitude,
-    };
-
-    const radio = 0.01; // ~1km alrededor del usuario
-    const fixedRegion: Region = {
-      latitude: center.lat,
-      longitude: center.lng,
-      latitudeDelta: radio * 2,
-      longitudeDelta: radio * 2,
-    };
-
-    const key = `${center.lat.toFixed(3)},${center.lng.toFixed(3)}`;
+    const key = [
+      region.latitude.toFixed(3),
+      region.longitude.toFixed(3),
+      region.latitudeDelta.toFixed(3),
+    ].join(',');
 
     if (cacheRef.current.has(key)) {
       setCalles(cacheRef.current.get(key)!);
       return;
     }
 
-    setLoading(true);
     try {
-      const data = await fetchStreetsFromAPI(fixedRegion);
+      const data = await fetchStreetsFromAPI(region);
       cacheRef.current.set(key, data);
-      setCalles(data);
+      setCalles(prev => {
+        // Combinar calles nuevas con las existentes (sin duplicados)
+        const ids = new Set(data.map(c => c.id_calle));
+        const kept = prev.filter(c => !ids.has(c.id_calle));
+        return [...kept, ...data];
+      });
     } catch (e) {
-      //console.warn('[Heatmap] error:', e);
-    } finally {
-      setLoading(false);
+      // Silencioso - mantiene las calles que ya tenía
     }
   };
 
   // Al activar heatmap, cargar de inmediato
   useEffect(() => {
-    if (heatmapVisible && location) {
-      const region: Region = {
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-        latitudeDelta: 0.02,
-        longitudeDelta: 0.02,
-      };
-      loadStreets(region);
-    }
-  }, [heatmapVisible, location]);
+    if (!heatmapVisible) return;
+    const region = regionRef.current ?? (location ? {
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude,
+      latitudeDelta: 0.02,
+      longitudeDelta: 0.02,
+    } : null);
+    if (region) loadStreets(region);
+  }, [heatmapVisible]);
 
   // Al mover el mapa con heatmap activo, recargar con debounce
   const handleRegionChange = (region: Region) => {
     regionRef.current = region;
     if (!heatmapVisible) return;
 
+    // Limpiar si zoom muy lejano
+    if (region.latitudeDelta > 0.04) {
+      setCalles([]);
+      return;
+    }
+
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => loadStreets(region), 1000);
+    debounceRef.current = setTimeout(() => loadStreets(region), 300);
   };
 
   // Vista 3D: pitch 75 grados para ver los edificios en perspectiva pronunciada.
@@ -275,7 +280,7 @@ const AsphaltMap = forwardRef<AsphaltMapHandle, Props>(({ location }, ref) => {
         followsUserLocation={false}
         onRegionChangeComplete={handleRegionChange}
       >
-        <StreetQualityLayer calles={calles} visible={heatmapVisible} />
+        <StreetQualityLayer calles={calles} visible={heatmapVisible} compact={calles.length > 150} />
       </MapView>
 
       {/* Capa transparente que cierra el menú al tocar fuera de él */}
