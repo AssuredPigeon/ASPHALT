@@ -1,3 +1,4 @@
+import api from '@/services/api';
 import type { AppTheme } from '@/theme';
 import { useTheme } from '@/theme';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -16,115 +17,27 @@ interface Props {
   location: LocationObject | null;
 }
 
-// Calles mock con sus índices de calidad 
-// Las coords NO están aquí — se obtienen de Overpass al activar el heatmap.
-// Cuando se conecté a la BD, reemplaza esto con los datos reales.
+async function fetchStreetsFromAPI(region: Region): Promise<CalleEstado[]> {
+  const south = region.latitude - region.latitudeDelta / 2;
+  const north = region.latitude + region.latitudeDelta / 2;
+  const west = region.longitude - region.longitudeDelta / 2;
+  const east = region.longitude + region.longitudeDelta / 2;
 
-const MOCK_QUALITY: Record<string, { id: number; indice: string }> = {
-  'Avenida Mutualismo':           { id: 1,  indice: '12.00' },
-  'Calle Coahuila':               { id: 2,  indice: '20.00' },
-  'Calle Artículo 123':           { id: 3,  indice: '38.00' },
-  'Calle Felipe Carrillo Puerto': { id: 4,  indice: '55.00' },
-  'Calle Salvador Díaz Mirón':    { id: 5,  indice: '68.00' },
-  'Avenida Flores Magón':         { id: 6,  indice: '82.00' },
-  'Blvd. Agua Caliente':          { id: 7,  indice: '44.00' },
-  'Paseo de los Héroes':          { id: 8,  indice: '90.00' },
-  'Avenida Revolución':           { id: 9,  indice: '30.00' },
-  'Calle Segunda':                { id: 10, indice: '16.00' },
-  'Calle Tercera':                { id: 11, indice: '72.00' },
-  'Avenida Constitución':         { id: 12, indice: '25.00' },
-};
-
-// Overpass API
-
-const OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
-
-// Evita errores con nombres, tildes, etc
-function normalizeName(name: string): string {
-  return name
-    .toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    .replace(/\b(avenida|boulevard|calzada|privada|paseo|calle|blvd|av|cal|priv)\b\.?/g, '')
-    .replace(/[^a-z0-9\s]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-async function fetchStreetsInRegion(region: Region): Promise<CalleEstado[]> {
-  // Bounding box, el zoom (aprox 400m)
-  const pad   = 0.004;
-  const south = region.latitude  - region.latitudeDelta  / 2 - pad;
-  const north = region.latitude  + region.latitudeDelta  / 2 + pad;
-  const west  = region.longitude - region.longitudeDelta / 2 - pad;
-  const east  = region.longitude + region.longitudeDelta / 2 + pad;
-
-  // Consulta la API de Overpass
-  const query = `
-    [out:json][timeout:20];
-    (
-      way["highway"~"^(primary|secondary|tertiary|residential|unclassified|trunk)$"]
-         ["name"]
-         (${south},${west},${north},${east});
-    );
-    out geom;
-  `.trim();
-
-  const res  = await fetch(OVERPASS_URL, {
-    method:  'POST',
-    body:    `data=${encodeURIComponent(query)}`,
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  const { data } = await api.get('/api/calles/viewport', {
+    params: { south, north, west, east, limit: 200 },
   });
 
-  if (!res.ok) throw new Error(`Overpass ${res.status}`);
-
-  const json    = await res.json();
-  const result: CalleEstado[] = [];
-
-  // Mapa normalizado de los nombres que tenemos con calidad asignada
-  const qualityNorm = new Map(
-    Object.entries(MOCK_QUALITY).map(([name, data]) => [normalizeName(name), { name, ...data }])
-  );
-
-  for (const el of json.elements) {
-    if (el.type !== 'way' || !el.geometry || !el.tags?.name) continue;
-
-    const osmNorm = normalizeName(el.tags.name);
-
-    // Match exacto o parcial
-    let match = qualityNorm.get(osmNorm);
-    if (!match) {
-      for (const [key, val] of qualityNorm.entries()) {
-        if (osmNorm.includes(key) || key.includes(osmNorm)) {
-          match = val;
-          break;
-        }
-      }
-    }
-
-    if (!match) continue;
-
-    result.push({
-      id_calle:            match.id,
-      calle_nombre:        el.tags.name,
-      indice_calidad:      match.indice,
-      fecha_actualizacion: new Date().toISOString(),
-      coordinates:         el.geometry.map((g: { lat: number; lon: number }) => ({
-        lat: g.lat,
-        lng: g.lon,
-      })),
-    });
-  }
-
-  return result;
+  return data.calles;  // Ya viene en el formato que espera StreetQualityLayer
 }
+
 
 // Leyenda 
 
 const LEYENDA = [
-  { color: 'rgba(50,  220, 90,  0.85)', label: 'Bueno (76–100)'  },
+  { color: 'rgba(50,  220, 90,  0.85)', label: 'Bueno (76–100)' },
   { color: 'rgba(245, 205, 30,  0.85)', label: 'Regular (51–75)' },
-  { color: 'rgba(255, 150, 50,  0.88)', label: 'Malo (26–50)'    },
-  { color: 'rgba(255, 90,  90,  0.95)', label: 'Crítico (0–25)'  },
+  { color: 'rgba(255, 150, 50,  0.88)', label: 'Malo (26–50)' },
+  { color: 'rgba(255, 90,  90,  0.95)', label: 'Crítico (0–25)' },
 ];
 
 // Componente 
@@ -133,25 +46,38 @@ const AsphaltMap = forwardRef<AsphaltMapHandle, Props>(({ location }, ref) => {
   const { theme, isDark } = useTheme();
   const styles = makeStyles(theme, isDark);
 
-  const mapRef          = useRef<MapView>(null);
+  const mapRef = useRef<MapView>(null);
   const lastLocationRef = useRef<LocationObject | null>(null);
-  const regionRef       = useRef<Region | null>(null);
-  const cacheRef        = useRef<Map<string, CalleEstado[]>>(new Map());
-  const debounceRef     = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const regionRef = useRef<Region | null>(null);
+  const cacheRef = useRef<Map<string, CalleEstado[]>>(new Map());
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [followUser,     setFollowUser]     = useState(true);
+  const [followUser, setFollowUser] = useState(true);
   const [heatmapVisible, setHeatmapVisible] = useState(false);
-  const [calles,         setCalles]         = useState<CalleEstado[]>([]);
-  const [loading,        setLoading]        = useState(false);
+  const [calles, setCalles] = useState<CalleEstado[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  // Fetch geometría desde Overpass
+  // Fetch geometría desde el backend
   const loadStreets = async (region: Region) => {
-    // Clave de caché por bbox redondeado a 3 decimales (~100m precisión)
-    const key = [
-      region.latitude.toFixed(3),
-      region.longitude.toFixed(3),
-      region.latitudeDelta.toFixed(3),
-    ].join(',');
+    console.log('[Heatmap] loadStreets llamado, location:', location ? 'SÍ' : 'NULL');
+    // Usar ubicación del usuario como centro (radio ~1km)
+    const center = location ? {
+      lat: location.coords.latitude,
+      lng: location.coords.longitude,
+    } : {
+      lat: region.latitude,
+      lng: region.longitude,
+    };
+
+    const radio = 0.01; // ~1km alrededor del usuario
+    const fixedRegion: Region = {
+      latitude: center.lat,
+      longitude: center.lng,
+      latitudeDelta: radio * 2,
+      longitudeDelta: radio * 2,
+    };
+
+    const key = `${center.lat.toFixed(3)},${center.lng.toFixed(3)}`;
 
     if (cacheRef.current.has(key)) {
       setCalles(cacheRef.current.get(key)!);
@@ -160,22 +86,31 @@ const AsphaltMap = forwardRef<AsphaltMapHandle, Props>(({ location }, ref) => {
 
     setLoading(true);
     try {
-      const data = await fetchStreetsInRegion(region);
+      //console.log('[Heatmap] Llamando API con:', JSON.stringify({ south: fixedRegion.latitude - fixedRegion.latitudeDelta / 2, north: fixedRegion.latitude + fixedRegion.latitudeDelta / 2 }));
+      const data = await fetchStreetsFromAPI(fixedRegion);
+      //console.log('[Heatmap] Calles recibidas:', data.length);
       cacheRef.current.set(key, data);
       setCalles(data);
     } catch (e) {
-      console.warn('[Heatmap] Overpass error:', e);
+      //console.warn('[Heatmap] error:', e);
     } finally {
       setLoading(false);
     }
   };
 
-  // Al activar heatmap, cargar de inmediato con la región actual 
+  // Al activar heatmap, cargar de inmediato
   useEffect(() => {
-    if (heatmapVisible && regionRef.current) {
-      loadStreets(regionRef.current);
+    //console.log('[Heatmap] useEffect - visible:', heatmapVisible, 'location:', location ? 'SÍ' : 'NULL');
+    if (heatmapVisible && location) {
+      const region: Region = {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        latitudeDelta: 0.02,
+        longitudeDelta: 0.02,
+      };
+      loadStreets(region);
     }
-  }, [heatmapVisible]);
+  }, [heatmapVisible, location]);
 
   // Al mover el mapa con heatmap activo, recargar con debounce
   const handleRegionChange = (region: Region) => {
@@ -199,14 +134,14 @@ const AsphaltMap = forwardRef<AsphaltMapHandle, Props>(({ location }, ref) => {
 
   // Map styles 
   const lightMapStyle = [
-    { elementType: 'geometry',                       stylers: [{ color: '#f5f5f5' }] },
-    { featureType: 'road',  elementType: 'geometry', stylers: [{ color: '#ffffff' }] },
+    { elementType: 'geometry', stylers: [{ color: '#f5f5f5' }] },
+    { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#ffffff' }] },
     { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#c9e6ff' }] },
   ];
   const darkMapStyle = [
-    { elementType: 'geometry',                       stylers: [{ color: '#2b2b2b' }] },
-    { elementType: 'labels.text.fill',               stylers: [{ color: '#bdbdbd' }] },
-    { featureType: 'road',  elementType: 'geometry', stylers: [{ color: '#3a3a3a' }] },
+    { elementType: 'geometry', stylers: [{ color: '#2b2b2b' }] },
+    { elementType: 'labels.text.fill', stylers: [{ color: '#bdbdbd' }] },
+    { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#3a3a3a' }] },
     { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#1e3a5f' }] },
   ];
 
@@ -234,7 +169,7 @@ const AsphaltMap = forwardRef<AsphaltMapHandle, Props>(({ location }, ref) => {
     regionRef.current = region;
   }, [location, followUser]);
 
-  const goToUser      = () => {
+  const goToUser = () => {
     if (!location) return;
     lastLocationRef.current = null;
     setFollowUser(true);
@@ -289,7 +224,7 @@ const AsphaltMap = forwardRef<AsphaltMapHandle, Props>(({ location }, ref) => {
         style={({ pressed }) => [
           styles.heatmapButton,
           heatmapVisible && styles.heatmapButtonActive,
-          pressed        && styles.heatmapButtonPressed,
+          pressed && styles.heatmapButtonPressed,
         ]}
       >
         <MaterialIcons
@@ -334,7 +269,7 @@ const makeStyles = (theme: AppTheme, isDark: boolean) =>
       borderRadius: theme.borderRadius.full, borderWidth: 1,
       borderColor: theme.colors.border, ...theme.shadows.lg,
     },
-    heatmapButtonActive:  { backgroundColor: theme.colors.primaryMuted, borderColor: theme.colors.primaryBorder },
+    heatmapButtonActive: { backgroundColor: theme.colors.primaryMuted, borderColor: theme.colors.primaryBorder },
     heatmapButtonPressed: { opacity: 0.7 },
     loadingBadge: {
       position: 'absolute', bottom: 390, right: theme.spacing.screenH,
