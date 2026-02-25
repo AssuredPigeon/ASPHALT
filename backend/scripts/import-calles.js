@@ -23,7 +23,7 @@ const pool = new Pool({
 const CIUDADES = [
     {
         nombre: 'Tijuana',
-        bbox: { south: 32.35, west: -117.12, north: 32.58, east: -116.85 },
+        bbox: { south: 32.35, west: -117.12, north: 32.58, east: -116.75 },
     },
     {
         nombre: 'Tecate',
@@ -211,7 +211,7 @@ async function main() {
 
                     await client.query(
                         `INSERT INTO estado_calle (id_calle, indice_calidad)
-             VALUES ($1, 50)`,
+             VALUES ($1, 100)`,
                         [res.rows[0].id_calle]
                     );
 
