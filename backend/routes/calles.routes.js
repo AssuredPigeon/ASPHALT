@@ -93,4 +93,25 @@ router.post("/:id/recalcular", async (req, res) => {
     }
 });
 
+/* OBTENER SUPERFICIE DE UNA CALLE */
+router.get("/:id/superficie", async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await db.query(
+            `SELECT c.id_calle, c.nombre, ts.nombre as tipo_superficie
+             FROM calles c
+             JOIN tipos_superficie ts ON c.tipo_superficie = ts.id_tipo
+             WHERE c.id_calle = $1`,
+            [id]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: "Calle no encontrada" });
+        }
+        res.json({ calle: result.rows[0] });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error al obtener superficie" });
+    }
+});
+
 module.exports = router;

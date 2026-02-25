@@ -133,6 +133,116 @@ router.post("/", async (req, res) => {
     }
 });
 
+/* INSERCIÓN MASIVA (sincronización offline) — SCRUM-50 */
+router.post("/bulk", async (req, res) => {
+    const { detecciones, id_viaje } = req.body;
+    const id_usuario = req.user.id_usuario;
+
+    if (!detecciones || !Array.isArray(detecciones) || detecciones.length === 0) {
+        return res.status(400).json({ message: "Se requiere array 'detecciones'" });
+    }
+
+    const resultados = { nuevas: 0, validadas: 0, errores: 0 };
+    const t_inicio = Date.now();
+
+    try {
+        for (const det of detecciones) {
+            const { latitud, longitud, id_tipo, severidad } = det;
+            if (!latitud || !longitud || !id_tipo) {
+                resultados.errores++;
+                continue;
+            }
+
+            try {
+                const duplicado = await db.query(
+                    `SELECT * FROM anomalias
+                     WHERE ST_DWithin(
+                       ST_SetSRID(ST_MakePoint(longitud, latitud), 4326)::geography,
+                       ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography,
+                       10
+                     )
+                     AND id_tipo = $3 AND estado != 'resuelto'
+                     LIMIT 1`,
+                    [longitud, latitud, id_tipo]
+                );
+
+                if (duplicado.rows.length > 0) {
+                    const existente = duplicado.rows[0];
+                    const nuevaConfianza = Math.min(existente.confianza + 5, 100);
+                    await db.query(
+                        `UPDATE anomalias SET confianza = $1 WHERE id_anomalia = $2`,
+                        [nuevaConfianza, existente.id_anomalia]
+                    );
+                    await db.query(
+                        `INSERT INTO historial_anomalia (id_anomalia, accion, id_usuario)
+                         VALUES ($1, 'validacion', $2)`,
+                        [existente.id_anomalia, id_usuario]
+                    );
+                    resultados.validadas++;
+                } else {
+                    let id_calle = 1;
+                    const calleResult = await db.query(
+                        `SELECT id_calle FROM calles
+                         WHERE geometria IS NOT NULL
+                         ORDER BY geometria <-> ST_SetSRID(ST_MakePoint($1, $2), 4326)
+                         LIMIT 1`,
+                        [longitud, latitud]
+                    );
+                    if (calleResult.rows.length > 0) {
+                        id_calle = calleResult.rows[0].id_calle;
+                    }
+
+                    const confianzaInicial = severidad === "severo" ? 60 : severidad === "moderado" ? 45 : 30;
+
+                    const result = await db.query(
+                        `INSERT INTO anomalias (id_tipo, id_calle, origen, confianza, estado, latitud, longitud)
+                         VALUES ($1, $2, 'sensor', $3, 'reportado', $4, $5)
+                         RETURNING *`,
+                        [id_tipo, id_calle, confianzaInicial, latitud, longitud]
+                    );
+
+                    await db.query(
+                        `INSERT INTO historial_anomalia (id_anomalia, accion, id_usuario)
+                         VALUES ($1, 'creacion', $2)`,
+                        [result.rows[0].id_anomalia, id_usuario]
+                    );
+
+                    if (id_viaje) {
+                        await db.query(
+                            `UPDATE estadisticas_viaje
+                             SET baches_detectados = baches_detectados + 1
+                             WHERE id_viaje = $1`,
+                            [id_viaje]
+                        );
+                    }
+                    resultados.nuevas++;
+                }
+            } catch (err) {
+                resultados.errores++;
+            }
+        }
+
+        await db.query(
+            `INSERT INTO estadisticas_usuario (id_usuario, total_baches)
+             VALUES ($1, $2)
+             ON CONFLICT (id_usuario) DO UPDATE
+             SET total_baches = estadisticas_usuario.total_baches + $2`,
+            [id_usuario, resultados.nuevas]
+        );
+
+        const t_fin = Date.now();
+        res.status(201).json({
+            message: "Bulk insert completado",
+            ...resultados,
+            total_procesadas: detecciones.length,
+            tiempo_ms: t_fin - t_inicio,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error en bulk insert" });
+    }
+});
+
 /* OBTENER ANOMALÍAS EN VIEWPORT (para el mapa) */
 router.get("/viewport", async (req, res) => {
     const { lat_min, lat_max, lng_min, lng_max } = req.query;
