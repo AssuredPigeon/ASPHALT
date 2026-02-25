@@ -1,8 +1,9 @@
+import { lightTheme } from '@/theme/light';
 import { Pressable, StyleSheet, Text } from 'react-native';
 
 type Props = {
-  label: string; // mostrará el texto
-  onPress?: () => void; 
+  label: string;
+  onPress?: () => void;
 };
 
 export default function AuthButton({ label, onPress }: Props) {
@@ -13,18 +14,20 @@ export default function AuthButton({ label, onPress }: Props) {
   );
 }
 
+const { colors } = lightTheme;
+
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: '#1E5EFF',
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 10,
+    backgroundColor: colors.primary,
+    height:          48,
+    borderRadius:    24,
+    alignItems:      'center',
+    justifyContent:  'center',
+    marginTop:       10,
   },
   text: {
-    color: '#FFFFFF',
-    fontSize: 16,
+    color:      colors.textInverse,
+    fontSize:   16,
     fontWeight: '600',
   },
 });
