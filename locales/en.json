@@ -33,6 +33,8 @@
   "profile": {
     "traveler": "Traveler #1",
     "joined": "Joined # days ago",
+    "joinedPrefix": "Joined",
+    "joinedSuffix": "days ago",
     "editProfile": "Edit profile",
     "unlockedBadges": "Unlocked badges",
     "seeAll": "See All",
@@ -55,15 +57,17 @@
   },
   "editProfile": {
     "changePhoto": "Change photo",
-    "username": "USERNAME",
-    "autoAssigned": "Auto-assigned",
+    "username": "NAME",
+    "usernamePlaceholder": "Your name",
     "email": "EMAIL",
     "emailPlaceholder": "you@email.com",
     "newPassword": "NEW PASSWORD",
     "passwordPlaceholder": "Leave blank to keep current",
     "confirmPassword": "CONFIRM PASSWORD",
     "confirmPlaceholder": "Repeat your password",
-    "passwordMismatch": "Passwords do not match"
+    "passwordMismatch": "Passwords do not match",
+    "saved": "Changes saved",
+    "saveError": "Could not save changes"
   },
   "search": {
     "placeholder": "Search location",

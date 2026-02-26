@@ -4,16 +4,22 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 
 
 interface User {
-  id: string;
+  id_usuario: number;
   email: string;
-  username: string;
+  nombre: string;
+  nivel: number;
+  puntos: number;
+  fecha_registro: string;
+  avatar_url: string | null;
 }
+
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (accessToken: string, refreshToken: string) => Promise<void>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -44,7 +50,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       await removeToken();
       setUser(null);
     } finally {
-      console.log("CHECK USER - loading → false, user:", user);
+      console.log("CHECK USER - loading → false");
       setLoading(false);
     }
   };
@@ -71,8 +77,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(null);
   };
 
+  const refreshUser = async () => {
+    try {
+      const res = await api.get("/auth/me");
+      setUser(res.data.user);
+    } catch (e) {
+      console.error("Error refreshing user:", e);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

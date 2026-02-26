@@ -56,7 +56,7 @@ router.get("/profile", async (req, res) => {
 /* ACTUALIZAR PERFIL */
 router.put("/profile", async (req, res) => {
     const id_usuario = req.user.id_usuario;
-    const { nombre, username } = req.body;
+    const { nombre, username, avatar_url } = req.body;
 
     try {
         // Si quiere cambiar username, verificar que no esté en uso
@@ -65,7 +65,6 @@ router.put("/profile", async (req, res) => {
                 "SELECT id_usuario FROM usuarios WHERE username = $1 AND id_usuario != $2",
                 [username, id_usuario]
             );
-
             if (usernameCheck.rows.length > 0) {
                 return res.status(400).json({ message: "Ese username ya está en uso" });
             }
@@ -74,10 +73,11 @@ router.put("/profile", async (req, res) => {
         const result = await db.query(
             `UPDATE usuarios
        SET nombre = COALESCE($1, nombre),
-           username = COALESCE($2, username)
-       WHERE id_usuario = $3
-       RETURNING id_usuario, email, nombre, username, nivel, puntos`,
-            [nombre, username, id_usuario]
+           username = COALESCE($2, username),
+           avatar_url = COALESCE($3, avatar_url)
+       WHERE id_usuario = $4
+       RETURNING id_usuario, email, nombre, username, nivel, puntos, avatar_url`,
+            [nombre, username, avatar_url, id_usuario]
         );
 
         res.json({ user: result.rows[0] });

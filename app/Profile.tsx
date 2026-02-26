@@ -4,10 +4,11 @@ import type { Badge } from '@/types/badge';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BadgeGrid from '../components/ui/BadgeGrid';
 import HistoryCard from '../components/ui/HistoryCard';
+
 
 // badges estaticas
 const ALL_BADGES: Badge[] = [
@@ -44,7 +45,7 @@ export default function ProfileScreen() {
   const { theme } = useTheme()
   const { colors, typography, spacing, borderRadius } = theme
   const insets = useSafeAreaInsets() // El posicionamiento de capa
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const { t } = useTranslation();
 
   // permite copia superficial
@@ -77,8 +78,15 @@ export default function ProfileScreen() {
 
           {/* AVATAR + NOMBRE + EDITAR */}
           <View style={[styles.centered, { marginBottom: spacing[8] }]}>
-            <View style={[styles.avatar, { borderColor: colors.primaryBorder, marginBottom: spacing[3] }]}>
-              <Ionicons name="person" size={40} color={colors.primary} />
+            <View style={[styles.avatar, { borderColor: colors.primaryBorder, marginBottom: spacing[3], overflow: 'hidden' }]}>
+              {user?.avatar_url ? (
+                <Image
+                  source={{ uri: user.avatar_url }}
+                  style={{ width: 88, height: 88, borderRadius: 44 }}
+                />
+              ) : (
+                <Ionicons name="person" size={40} color={colors.primary} />
+              )}
             </View>
             <Text style={{
               color: colors.text,
@@ -86,7 +94,7 @@ export default function ProfileScreen() {
               fontSize: typography.fontSize['2xl'],
               marginBottom: 2,
             }}>
-              {t('profile.traveler')}
+              {user?.nombre ?? t('guest.button')}
             </Text>
             <Text style={{
               color: colors.textSecondary,
@@ -94,7 +102,9 @@ export default function ProfileScreen() {
               fontSize: typography.fontSize.sm,
               marginBottom: spacing[4],
             }}>
-              {t('profile.joined')}
+              {user?.fecha_registro
+                ? `${t('profile.joinedPrefix')} ${Math.floor((Date.now() - new Date(user.fecha_registro).getTime()) / 86400000)} ${t('profile.joinedSuffix')}`
+                : t('profile.joined')}
             </Text>
             <TouchableOpacity
               onPress={() => router.navigate('/EditProfile' as any)}

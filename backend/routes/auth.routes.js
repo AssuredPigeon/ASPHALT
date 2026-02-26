@@ -89,6 +89,8 @@ router.post("/login", async (req, res) => {
         nombre: user.nombre,
         nivel: user.nivel,
         puntos: user.puntos,
+        fecha_registro: user.fecha_registro,
+        avatar_url: user.avatar_url,
       },
     });
   } catch (error) {
@@ -175,6 +177,8 @@ router.post("/google", async (req, res) => {
         nombre: user.nombre,
         nivel: user.nivel,
         puntos: user.puntos,
+        fecha_registro: user.fecha_registro,
+        avatar_url: user.avatar_url,
       },
     });
   } catch (error) {
@@ -389,7 +393,7 @@ const authMiddleware = require("../middleware/authMiddleware");
 router.get("/me", authMiddleware, async (req, res) => {
   try {
     const result = await db.query(
-      "SELECT id_usuario, email, nombre, nivel, puntos FROM usuarios WHERE id_usuario = $1",
+      "SELECT id_usuario, email, nombre, nivel, puntos, fecha_registro, avatar_url FROM usuarios WHERE id_usuario = $1",
       [req.user.id_usuario]
     );
 
