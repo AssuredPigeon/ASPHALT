@@ -7,8 +7,8 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 
 import SettingRow from '@/components/ui/SettingRow';
 import SettingsSection from '@/components/ui/SettingsSection';
-import { useAppSettings } from './AppSettingsContext';
-import { useMapSettings } from './MapSettingsContext';
+import { useAppSettings } from '../context/AppSettingsContext';
+import { useMapSettings } from '../context/MapSettingsContext';
 
 export default function SettingsScreen() {
   const { theme } = useTheme();

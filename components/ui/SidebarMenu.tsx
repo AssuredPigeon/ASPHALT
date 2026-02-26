@@ -23,7 +23,8 @@ export default function SidebarMenu() {
 
       {/* Contenido */}
       <View style={styles.content}>
-        <UserHeader userName={user?.nombre?.split(' ')[0] ?? undefined} />
+        <UserHeader userName={user?.nombre?.split(' ')[0] ?? undefined} avatarUrl={user?.avatar_url} />
+
 
         <View style={styles.divider} />
 

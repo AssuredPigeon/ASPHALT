@@ -57,15 +57,17 @@
   },
   "editProfile": {
     "changePhoto": "Cambiar foto",
-    "username": "USUARIO",
-    "autoAssigned": "Auto-asignado",
+    "username": "NOMBRE",
+    "usernamePlaceholder": "Tu nombre",
     "email": "CORREO ELECTRÓNICO",
     "emailPlaceholder": "tu@correo.com",
     "newPassword": "NUEVA CONTRASEÑA",
     "passwordPlaceholder": "Dejar vacío para no cambiar",
     "confirmPassword": "CONFIRMAR CONTRASEÑA",
     "confirmPlaceholder": "Repite la contraseña",
-    "passwordMismatch": "Las contraseñas no coinciden"
+    "passwordMismatch": "Las contraseñas no coinciden",
+    "saved": "Cambios guardados",
+    "saveError": "No se pudieron guardar los cambios"
   },
   "search": {
     "placeholder": "Buscar ubicación",

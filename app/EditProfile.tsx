@@ -1,9 +1,15 @@
 import { useAuth } from '@/context/AuthContext';
+import api from '@/services/api';
+import { supabase } from '@/services/supabase';
 import { Ionicons } from '@expo/vector-icons';
+import { decode } from 'base64-arraybuffer';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  ActivityIndicator, Alert, Image,
   ScrollView, StyleSheet, Text,
   TextInput, TouchableOpacity, View
 } from 'react-native';
@@ -11,14 +17,16 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'; // margenes 
 import { useTheme } from '../theme';
 
 export default function EditProfileScreen() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const router = useRouter()
   const { theme } = useTheme()
   const { colors, typography, spacing, borderRadius } = theme
   const insets = useSafeAreaInsets()
   const { t } = useTranslation()
 
-  const [email, setEmail] = useState(user?.email ?? '')
+  const [avatarUri, setAvatarUri] = useState<string | null>(user?.avatar_url ?? null);
+  const [nombre, setNombre] = useState(user?.nombre ?? '');
+  const [saving, setSaving] = useState(false);
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPass, setShowPass] = useState(false)
@@ -26,6 +34,71 @@ export default function EditProfileScreen() {
 
   const passwordMismatch =
     confirmPassword !== '' && confirmPassword !== newPassword
+
+  // Seleccionar foto
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permiso necesario', 'Necesitamos acceso a tu galería');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+    if (!result.canceled && result.assets[0]) {
+      setAvatarUri(result.assets[0].uri);
+    }
+  };
+
+  // Subir foto a Supabase
+  const uploadAvatar = async (uri: string): Promise<string | null> => {
+    try {
+      const fileName = `${user!.id_usuario}_${Date.now()}.jpg`;
+      const base64 = await FileSystem.readAsStringAsync(uri, {
+        encoding: 'base64',
+      });
+      const { error } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, decode(base64), {
+          contentType: 'image/jpeg',
+          upsert: true,
+        });
+      if (error) {
+        console.error('Upload error:', error);
+        return null;
+      }
+      const { data } = supabase.storage.from('avatars').getPublicUrl(fileName);
+      return data.publicUrl;
+    } catch (e) {
+      console.error('Upload error:', e);
+      return null;
+    }
+  };
+
+
+  // Guardar cambios
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      let avatar_url = user?.avatar_url ?? null;
+      if (avatarUri && avatarUri !== user?.avatar_url) {
+        const uploadedUrl = await uploadAvatar(avatarUri);
+        if (uploadedUrl) avatar_url = uploadedUrl;
+      }
+      await api.put('/api/users/profile', { nombre: nombre || undefined, avatar_url });
+      await refreshUser();
+      Alert.alert('✅', t('editProfile.saved') || 'Cambios guardados');
+      router.back();
+    } catch (e) {
+      Alert.alert('Error', t('editProfile.saveError') || 'Error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
 
   return (
     <View style={[styles.container, {
@@ -54,32 +127,41 @@ export default function EditProfileScreen() {
 
             {/* Botón guardar en el header (ícono de disco/save) */}
             <TouchableOpacity
+              onPress={handleSave}
+              disabled={saving}
               style={[styles.iconBtn, {
                 borderRadius: borderRadius.button,
                 borderColor: colors.primary,
                 backgroundColor: colors.primary,
+                opacity: saving ? 0.5 : 1,
               }]}
               activeOpacity={0.8}
             >
-              <Ionicons name="save-outline" size={18} color={colors.textInverse ?? '#fff'} />
+              {saving
+                ? <ActivityIndicator size="small" color="#fff" />
+                : <Ionicons name="save-outline" size={18} color={colors.textInverse ?? '#fff'} />
+              }
             </TouchableOpacity>
+
           </View>
 
           {/* AVATAR circular + cámara */}
           <View style={[styles.centered, { marginBottom: spacing[9] }]}>
             <View style={styles.avatarWrap}>
               {/* Círculo de avatar */}
-              <View style={[styles.avatarCircle, { borderColor: colors.primaryBorder }]}>
-                <Ionicons name="person" size={40} color={colors.primary} />
+              <View style={[styles.avatarCircle, { borderColor: colors.primaryBorder, overflow: 'hidden' }]}>
+                {avatarUri ? (
+                  <Image source={{ uri: avatarUri }} style={{ width: 88, height: 88, borderRadius: 44 }} />
+                ) : (
+                  <Ionicons name="person" size={40} color={colors.primary} />
+                )}
               </View>
               {/* Botón cámara */}
-              <TouchableOpacity style={[styles.cameraBtn, {
-                borderColor: colors.background,
-              }]}>
+              <TouchableOpacity onPress={pickImage} style={[styles.cameraBtn, { borderColor: colors.background }]}>
                 <Ionicons name="camera" size={14} color="#fff" />
               </TouchableOpacity>
             </View>
-            <TouchableOpacity style={{ marginTop: spacing[3] }}>
+            <TouchableOpacity onPress={pickImage} style={{ marginTop: spacing[3] }}>
               <Text style={{
                 color: colors.primary,
                 fontFamily: typography.fontFamily.semiBold,
@@ -90,7 +172,7 @@ export default function EditProfileScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* USUARIO (solo lectura) */}
+          {/* NOMBRE */}
           <View style={{ marginBottom: spacing[5] }}>
             <Text style={[styles.label, {
               color: colors.textSecondary,
@@ -99,29 +181,25 @@ export default function EditProfileScreen() {
             }]}>
               {t('editProfile.username')}
             </Text>
-            <View style={[styles.readonlyField, {
+            <View style={[styles.inputRow, {
               borderRadius: borderRadius.input,
-              borderColor: colors.border,
+              borderColor: colors.inputBorder,
               backgroundColor: colors.inputBackground,
             }]}>
-              <Ionicons name="person-outline" size={16} color={colors.textTertiary} style={{ marginRight: 10 }} />
-              <Text style={{
-                color: colors.textSecondary,
-                fontFamily: typography.fontFamily.medium,
-                fontSize: typography.fontSize.md,
-                flex: 1,
-              }}>
-                {user?.nombre ?? 'usuario1234'}
-              </Text>
-              <View style={[styles.autoTag, { backgroundColor: colors.primaryMuted }]}>
-                <Text style={{
-                  color: colors.textTertiary,
+              <Ionicons name="person-outline" size={16} color={colors.textTertiary} style={{ marginLeft: 14 }} />
+              <TextInput
+                style={[styles.inputInner, {
+                  color: colors.text,
                   fontFamily: typography.fontFamily.medium,
-                  fontSize: typography.fontSize.xs,
-                }}>
-                  {t('editProfile.autoAssigned')}
-                </Text>
-              </View>
+                  fontSize: typography.fontSize.md,
+                }]}
+                value={nombre}
+                onChangeText={setNombre}
+                placeholder={t('editProfile.usernamePlaceholder') || 'Tu nombre'}
+                placeholderTextColor={colors.inputPlaceholder}
+                autoCapitalize="words"
+                autoCorrect={false}
+              />
             </View>
           </View>
 
@@ -134,26 +212,20 @@ export default function EditProfileScreen() {
             }]}>
               {t('editProfile.email')}
             </Text>
-            <View style={[styles.inputRow, {
+            <View style={[styles.readonlyField, {
               borderRadius: borderRadius.input,
-              borderColor: colors.inputBorder,
+              borderColor: colors.border,
               backgroundColor: colors.inputBackground,
             }]}>
-              <Ionicons name="mail-outline" size={16} color={colors.textTertiary} style={{ marginLeft: 14 }} />
-              <TextInput
-                style={[styles.inputInner, {
-                  color: colors.text,
-                  fontFamily: typography.fontFamily.medium,
-                  fontSize: typography.fontSize.md,
-                }]}
-                value={email}
-                onChangeText={setEmail}
-                placeholder={t('editProfile.emailPlaceholder')}
-                placeholderTextColor={colors.inputPlaceholder}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
+              <Ionicons name="mail-outline" size={16} color={colors.textTertiary} style={{ marginRight: 10 }} />
+              <Text style={{
+                color: colors.textSecondary,
+                fontFamily: typography.fontFamily.medium,
+                fontSize: typography.fontSize.md,
+                flex: 1,
+              }}>
+                {user?.email ?? ''}
+              </Text>
             </View>
           </View>
 

@@ -4,10 +4,11 @@ import type { Badge } from '@/types/badge';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BadgeGrid from '../components/ui/BadgeGrid';
 import HistoryCard from '../components/ui/HistoryCard';
+
 
 // badges estaticas
 const ALL_BADGES: Badge[] = [
@@ -77,8 +78,15 @@ export default function ProfileScreen() {
 
           {/* AVATAR + NOMBRE + EDITAR */}
           <View style={[styles.centered, { marginBottom: spacing[8] }]}>
-            <View style={[styles.avatar, { borderColor: colors.primaryBorder, marginBottom: spacing[3] }]}>
-              <Ionicons name="person" size={40} color={colors.primary} />
+            <View style={[styles.avatar, { borderColor: colors.primaryBorder, marginBottom: spacing[3], overflow: 'hidden' }]}>
+              {user?.avatar_url ? (
+                <Image
+                  source={{ uri: user.avatar_url }}
+                  style={{ width: 88, height: 88, borderRadius: 44 }}
+                />
+              ) : (
+                <Ionicons name="person" size={40} color={colors.primary} />
+              )}
             </View>
             <Text style={{
               color: colors.text,

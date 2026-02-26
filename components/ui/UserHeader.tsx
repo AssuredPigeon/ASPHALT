@@ -2,14 +2,15 @@ import type { AppTheme } from '@/theme';
 import { useTheme } from '@/theme';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 type Props = {
   userName?: string;
+  avatarUrl?: string | null;
 };
 
-{/* Aquí va el nombre del usuario, luego conectarlo con el auth */}
-export default function UserHeader({ userName = 'Ainy' }: Props) {
+{/* Aquí va el nombre del usuario, luego conectarlo con el auth */ }
+export default function UserHeader({ userName = 'Ainy', avatarUrl }: Props) {
   const { theme } = useTheme();
   const styles = makeStyles(theme);
   const { t } = useTranslation();
@@ -18,7 +19,11 @@ export default function UserHeader({ userName = 'Ainy' }: Props) {
     <View style={styles.row}>
 
       {/* Avatar placeholder */}
-      <View style={styles.avatar} />
+      {avatarUrl ? (
+        <Image source={{ uri: avatarUrl }} style={styles.avatar} />
+      ) : (
+        <View style={styles.avatar} />
+      )}
 
       <View style={styles.textContainer}>
         <Text style={styles.hola}>{t('userHeader.hello')}</Text>
@@ -41,23 +46,24 @@ const makeStyles = (theme: AppTheme) =>
   StyleSheet.create({
     row: {
       flexDirection: 'row',
-      gap:           theme.spacing[3.5],
-      alignItems:    'center',
+      gap: theme.spacing[3.5],
+      alignItems: 'center',
     },
     avatar: {
-      width:           theme.componentSize.avatarLg,
-      height:          theme.componentSize.avatarLg,
-      borderRadius:    theme.borderRadius.lg,
+      width: theme.componentSize.avatarLg,
+      height: theme.componentSize.avatarLg,
+      borderRadius: theme.borderRadius.lg,
       backgroundColor: theme.colors.surfaceTertiary,
-      borderWidth:     2,
-      borderColor:     theme.colors.primaryBorder,
+      borderWidth: 2,
+      borderColor: theme.colors.primaryBorder,
+      overflow: 'hidden',
     },
     textContainer: {
       justifyContent: 'center',
     },
     hola: {
       ...theme.typography.styles.subtitle,
-      color:   theme.colors.textSecondary,
+      color: theme.colors.textSecondary,
       opacity: 0.85,
     },
     name: {
@@ -66,13 +72,13 @@ const makeStyles = (theme: AppTheme) =>
     },
     userName: {
       ...theme.typography.styles.h2,
-      color:      theme.colors.primary,
+      color: theme.colors.primary,
       fontFamily: theme.typography.fontFamily.bold,
     },
     link: {
       ...theme.typography.styles.body,
-      color:      theme.colors.primary,
-      marginTop:  theme.spacing[1],
-      opacity:    0.8,
+      color: theme.colors.primary,
+      marginTop: theme.spacing[1],
+      opacity: 0.8,
     },
   });
