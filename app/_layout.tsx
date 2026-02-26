@@ -4,8 +4,9 @@ import '@/i18n';
 import { ThemeProvider } from "@/theme/ThemeContext";
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { MapSettingsProvider } from './MapSettingsContext';
-
+import { AppSettingsProvider } from "../context/AppSettingsContext";
+import { DrivingModeProvider } from '../context/DrivingModeContext'; // Contexto del modo conducción
+import { MapSettingsProvider } from '../context/MapSettingsContext';
 
 // Inner layout — ya dentro de ThemeProvider, puede usar useTheme 
 function RootLayoutInner() {
@@ -47,9 +48,14 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <MapSettingsProvider>
-          <RootLayoutInner />
-        </MapSettingsProvider>
+        {/* DrivingModeProvider envuelve todo para que la tab bar pueda leerlo */}
+        <DrivingModeProvider>
+          <MapSettingsProvider>
+            <AppSettingsProvider>
+              <RootLayoutInner />
+            </AppSettingsProvider>
+          </MapSettingsProvider>
+        </DrivingModeProvider>
       </AuthProvider>
     </ThemeProvider>
   );

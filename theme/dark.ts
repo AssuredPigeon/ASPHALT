@@ -7,7 +7,7 @@ export const darkTheme = {
     surfaceSecondary: '#1E2F55',   // cards elevadas - hover states
     surfaceTertiary:  '#243460',   // elementos destacados dentro de cards
 
-    // Marca / Acento
+    // Marca
     primary:          '#4C8DFF',   // azul principal (botones, íconos activos)
     primaryHover:     '#3B7EF0',   // hover/pressed
     primaryMuted:     'rgba(76,141,255,0.15)', // fondos con toque azul
