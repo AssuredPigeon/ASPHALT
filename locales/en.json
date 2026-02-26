@@ -26,7 +26,7 @@
   },
   "map": {
     "permissionDenied": "Permission denied",
-    "permissionMessage": "Asphalt needs access to your location to work. Enable it in Settings.",
+    "permissionMessage": "Vialix needs access to your location to work. Enable it in Settings.",
     "ok": "OK",
     "searchPlaceholder": "Search place..."
   },
@@ -107,7 +107,7 @@
     "total": "{{count}} reports total"
   },
   "auth": {
-    "subtitle": "Roads don't warn you.\nAsphalt does.",
+    "subtitle": "Roads don't warn you.\nVialix does.",
     "emailPlaceholder": "Email address",
     "passwordPlaceholder": "Password",
     "rememberMe": "Remember me",
@@ -219,5 +219,14 @@
     "startButton": "Start",
     "defaultDestination": "Destination",
     "howToGet": "Directions"
-  }
+  },
+  "acoustic": {
+    "title":           "Acoustic",
+    "no_signal":       "No signal",
+    "smooth_pavement": "Smooth pavement",
+    "regular_asphalt": "Regular asphalt",
+    "rough_surface":   "Rough surface",
+    "uneven_terrain":  "Uneven terrain"
+  },
+  "splash": { "loading": "LOADING" }
 }

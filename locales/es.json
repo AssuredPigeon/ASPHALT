@@ -26,7 +26,7 @@
   },
   "map": {
     "permissionDenied": "Permiso denegado",
-    "permissionMessage": "Asphalt necesita acceso a tu ubicación para funcionar. Actívalo en Configuración.",
+    "permissionMessage": "Vialix necesita acceso a tu ubicación para funcionar. Actívalo en Configuración.",
     "ok": "OK",
     "searchPlaceholder": "Buscar lugar..."
   },
@@ -107,7 +107,7 @@
     "total": "{{count}} reportes en total"
   },
   "auth": {
-    "subtitle": "Las calles no avisan.\nAsphalt sí.",
+    "subtitle": "Las calles no avisan.\nVialix sí.",
     "emailPlaceholder": "Correo electrónico",
     "passwordPlaceholder": "Contraseña",
     "rememberMe": "Recuérdame",
@@ -219,5 +219,14 @@
     "startButton": "Comenzar",
     "defaultDestination": "Destino",
     "howToGet": "Cómo llegar"
-  }
+  },
+  "acoustic": {
+    "title":           "Acústico",
+    "no_signal":       "Sin señal",
+    "smooth_pavement": "Pavimento liso",
+    "regular_asphalt": "Asfalto regular",
+    "rough_surface":   "Superficie rugosa",
+    "uneven_terrain":  "Terreno irregular"
+  },
+  "splash": { "loading": "CARGANDO" }
 }
