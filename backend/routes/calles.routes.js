@@ -8,23 +8,30 @@ router.use(authMiddleware);
 
 /* OBTENER CALLES EN VIEWPORT CON GEOMETRÍA */
 router.get("/viewport", async (req, res) => {
-    const { south, north, west, east, limit = 200 } = req.query;
+    const { south, north, west, east, limit = 500, simplify } = req.query;
 
-    // Validar que vengan los 4 parámetros
     if (!south || !north || !west || !east) {
         return res.status(400).json({
             message: "Se requieren south, north, west, east"
         });
     }
 
+    // Nivel de simplificación basado en el zoom
+    // simplify alto = zoom lejano, simplify bajo = zoom cercano
+    const tolerance = parseFloat(simplify) || 0;
+
     try {
+        const geomExpr = tolerance > 0
+            ? `ST_AsGeoJSON(ST_Simplify(c.geometria, ${tolerance}))::json`
+            : `ST_AsGeoJSON(c.geometria)::json`;
+
         const result = await db.query(
             `SELECT 
                 c.id_calle,
                 c.nombre AS calle_nombre,
                 COALESCE(ec.indice_calidad, 100) AS indice_calidad,
                 COALESCE(ec.fecha_actualizacion, NOW()) AS fecha_actualizacion,
-                ST_AsGeoJSON(c.geometria)::json AS geojson
+                ${geomExpr} AS geojson
              FROM calles c
              LEFT JOIN estado_calle ec ON c.id_calle = ec.id_calle
              WHERE c.geometria && ST_MakeEnvelope($1, $2, $3, $4, 4326)
@@ -32,17 +39,18 @@ router.get("/viewport", async (req, res) => {
             [west, south, east, north, parseInt(limit)]
         );
 
-        // Convertir GeoJSON a array de {lat, lng}
-        const calles = result.rows.map(row => ({
-            id_calle: row.id_calle,
-            calle_nombre: row.calle_nombre,
-            indice_calidad: row.indice_calidad.toString(),
-            fecha_actualizacion: row.fecha_actualizacion,
-            coordinates: row.geojson.coordinates.map(([lng, lat]) => ({
-                lat,
-                lng,
-            })),
-        }));
+        const calles = result.rows
+            .filter(row => row.geojson && row.geojson.coordinates && row.geojson.coordinates.length >= 2)
+            .map(row => ({
+                id_calle: row.id_calle,
+                calle_nombre: row.calle_nombre,
+                indice_calidad: row.indice_calidad.toString(),
+                fecha_actualizacion: row.fecha_actualizacion,
+                coordinates: row.geojson.coordinates.map(([lng, lat]) => ({
+                    lat,
+                    lng,
+                })),
+            }));
 
         res.json({ calles, total: calles.length });
     } catch (error) {
