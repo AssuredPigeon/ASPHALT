@@ -2,6 +2,7 @@ import type { AppTheme } from '@/theme';
 import { useTheme } from '@/theme';
 import { Audio } from 'expo-av';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 interface AcousticSensorProps {
@@ -10,30 +11,31 @@ interface AcousticSensorProps {
 
 // Clasifica el tipo de superficie según el nivel de dB captado
 // Mientras más ruido de rodadura, más rugoso es el pavimento
-type Superficie = 'Sin señal' | 'Pavimento liso' | 'Asfalto regular' | 'Superficie rugosa' | 'Terreno irregular';
+type SurfaceKey = 'no_signal' | 'smooth_pavement' | 'regular_asphalt' | 'rough_surface' | 'uneven_terrain';
 
-function clasificarSuperficie(db: number): Superficie {
-  if (db <= -80) return 'Sin señal';
-  if (db <= -55) return 'Pavimento liso';
-  if (db <= -35) return 'Asfalto regular';
-  if (db <= -20) return 'Superficie rugosa';
-  return 'Terreno irregular';
+function classifySurface(db: number): SurfaceKey {
+  if (db <= -80) return 'no_signal';
+  if (db <= -55) return 'smooth_pavement';
+  if (db <= -35) return 'regular_asphalt';
+  if (db <= -20) return 'rough_surface';
+  return 'uneven_terrain';
 }
 
 // Color del punto según la superficie detectada
-const getDotColor = (superficie: Superficie, theme: AppTheme): string => {
-  switch (superficie) {
-    case 'Pavimento liso':    return theme.colors.success;
-    case 'Asfalto regular':   return theme.colors.primary;
-    case 'Superficie rugosa': return theme.colors.warning;
-    case 'Terreno irregular': return theme.colors.error;
-    default:                  return theme.colors.textSecondary;
+const getDotColor = (surface: SurfaceKey, theme: AppTheme): string => {
+  switch (surface) {
+    case 'smooth_pavement': return theme.colors.success;
+    case 'regular_asphalt': return theme.colors.primary;
+    case 'rough_surface':   return theme.colors.warning;
+    case 'uneven_terrain':  return theme.colors.error;
+    default:                return theme.colors.textSecondary;
   }
 };
 
 export function AcousticSensor({ drivingMode }: AcousticSensorProps) {
   const { theme } = useTheme();
   const styles    = makeStyles(theme);
+  const { t }     = useTranslation();
 
   const [recording, setRecording]               = useState<Audio.Recording | null>(null);
   const [permissionResponse, requestPermission] = Audio.usePermissions();
@@ -97,8 +99,8 @@ export function AcousticSensor({ drivingMode }: AcousticSensorProps) {
     }
   }
 
-  const superficie  = clasificarSuperficie(metering);
-  const dotColor    = getDotColor(superficie, theme);
+  const surface  = classifySurface(metering);
+  const dotColor = getDotColor(surface, theme);
 
   return (
     // Todo en una sola fila horizontal para ocupar el mínimo espacio posible
@@ -108,14 +110,14 @@ export function AcousticSensor({ drivingMode }: AcousticSensorProps) {
       <View style={[styles.dot, { backgroundColor: dotColor }]} />
 
       {/* Etiqueta fija */}
-      <Text style={styles.title}>Acústico</Text>
+      <Text style={styles.title}>{t('acoustic.title')}</Text>
 
       {/* Separador visual */}
       <View style={styles.divider} />
 
       {/* Tipo de superficie detectado — ocupa el espacio sobrante */}
-      <Text style={[styles.superficie, { color: dotColor }]} numberOfLines={1}>
-        {superficie}
+      <Text style={[styles.surface, { color: dotColor }]} numberOfLines={1}>
+        {t(`acoustic.${surface}`)}
       </Text>
 
       {/* Valor dB en el extremo derecho */}
@@ -157,7 +159,7 @@ const makeStyles = (theme: AppTheme) =>
       height:          14,
       backgroundColor: theme.colors.divider,
     },
-    superficie: {
+    surface: {
       flex: 1,   // Ocupa el espacio sobrante entre el separador y el dB
       ...theme.typography.styles.label,
       fontWeight: '600',

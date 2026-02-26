@@ -1,13 +1,14 @@
 import React, { useEffect, useRef } from 'react';
 import {
-    Animated,
-    Dimensions,
-    StyleSheet,
-    Text,
-    View,
+  Animated,
+  Dimensions,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
 {/* ref para valores persistentes */}
 
+import { useTranslation } from 'react-i18next';
 import { Image, ImageBackground } from 'react-native';
 
 {/* Toma las dimensiones de la pantalla */}
@@ -20,6 +21,8 @@ type SplashScreenProps = {
 
 {/* Componente principal (extrae onComplete desde props) */}
 const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
+    const { t } = useTranslation();
+
     {/* Evitar el reseteo en cada render con ref  */}
     const progress1 = useRef(new Animated.Value(0)).current;
     const progress2 = useRef(new Animated.Value(0)).current; 
@@ -109,7 +112,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
             />
         </View>
 
-        <Text style={styles.logoText}>CARGANDO</Text>
+        <Text style={styles.logoText}>{t('splash.loading')}</Text>
       </Animated.View>
 
         {/* Barras de progreso */}
