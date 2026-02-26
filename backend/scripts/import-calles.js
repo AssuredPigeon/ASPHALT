@@ -23,7 +23,8 @@ const pool = new Pool({
 const CIUDADES = [
     {
         nombre: 'Tijuana',
-        bbox: { south: 32.35, west: -117.12, north: 32.58, east: -116.75 },
+        bbox: { south: 32.25, west: -117.12, north: 32.58, east: -116.58 },
+
     },
     {
         nombre: 'Tecate',

@@ -1,3 +1,4 @@
+import { useAuth } from '@/context/AuthContext';
 import type { AppTheme } from '@/theme';
 import { useTheme } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,7 +12,8 @@ import UserHeader from './UserHeader';
 export default function SidebarMenu() {
   const { theme } = useTheme();
   const styles = makeStyles(theme);
-  const { t } = useTranslation(); 
+  const { t } = useTranslation();
+  const { user } = useAuth();
 
   return (
     <View style={styles.container}>
@@ -21,7 +23,7 @@ export default function SidebarMenu() {
 
       {/* Contenido */}
       <View style={styles.content}>
-        <UserHeader />
+        <UserHeader userName={user?.nombre?.split(' ')[0] ?? undefined} />
 
         <View style={styles.divider} />
 
@@ -53,23 +55,23 @@ export default function SidebarMenu() {
 const makeStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {
-      flex:            1,
+      flex: 1,
       backgroundColor: theme.colors.background,
-      position:        'relative',
+      position: 'relative',
     },
     content: {
-      flex:      1,
-      padding:   theme.spacing[7],
+      flex: 1,
+      padding: theme.spacing[7],
       marginTop: theme.spacing[14],
-      zIndex:    theme.zIndex.raised,
+      zIndex: theme.zIndex.raised,
     },
     menuItem: {
       flexDirection: 'row',
-      alignItems:    'center',
-      gap:           theme.spacing[3.5],
+      alignItems: 'center',
+      gap: theme.spacing[3.5],
       paddingVertical: theme.spacing[2],
       paddingHorizontal: theme.spacing[2],
-      borderRadius:  theme.borderRadius.sm,
+      borderRadius: theme.borderRadius.sm,
     },
     menuItemPressed: {
       backgroundColor: theme.colors.primaryMuted,
@@ -79,18 +81,18 @@ const makeStyles = (theme: AppTheme) =>
       color: theme.colors.text,
     },
     toggleRow: {
-      flexDirection:  'row',
+      flexDirection: 'row',
       justifyContent: 'space-between',
-      alignItems:     'center',
+      alignItems: 'center',
     },
     toggleLeft: {
       flexDirection: 'row',
-      alignItems:    'center',
-      gap:           theme.spacing[3],
+      alignItems: 'center',
+      gap: theme.spacing[3],
     },
     divider: {
-      height:          1,
+      height: 1,
       backgroundColor: theme.colors.divider,
-      marginVertical:  theme.spacing.sectionGap,
+      marginVertical: theme.spacing.sectionGap,
     },
   });

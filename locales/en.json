@@ -33,6 +33,8 @@
   "profile": {
     "traveler": "Traveler #1",
     "joined": "Joined # days ago",
+    "joinedPrefix": "Joined",
+    "joinedSuffix": "days ago",
     "editProfile": "Edit profile",
     "unlockedBadges": "Unlocked badges",
     "seeAll": "See All",

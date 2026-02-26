@@ -4,10 +4,14 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 
 
 interface User {
-  id: string;
+  id_usuario: number;
   email: string;
-  username: string;
+  nombre: string;
+  nivel: number;
+  puntos: number;
+  fecha_registro: string;
 }
+
 
 interface AuthContextType {
   user: User | null;
@@ -44,7 +48,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       await removeToken();
       setUser(null);
     } finally {
-      console.log("CHECK USER - loading → false, user:", user);
+      console.log("CHECK USER - loading → false");
       setLoading(false);
     }
   };

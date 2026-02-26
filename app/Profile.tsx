@@ -44,7 +44,7 @@ export default function ProfileScreen() {
   const { theme } = useTheme()
   const { colors, typography, spacing, borderRadius } = theme
   const insets = useSafeAreaInsets() // El posicionamiento de capa
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const { t } = useTranslation();
 
   // permite copia superficial
@@ -86,7 +86,7 @@ export default function ProfileScreen() {
               fontSize: typography.fontSize['2xl'],
               marginBottom: 2,
             }}>
-              {t('profile.traveler')}
+              {user?.nombre ?? t('guest.button')}
             </Text>
             <Text style={{
               color: colors.textSecondary,
@@ -94,7 +94,9 @@ export default function ProfileScreen() {
               fontSize: typography.fontSize.sm,
               marginBottom: spacing[4],
             }}>
-              {t('profile.joined')}
+              {user?.fecha_registro
+                ? `${t('profile.joinedPrefix')} ${Math.floor((Date.now() - new Date(user.fecha_registro).getTime()) / 86400000)} ${t('profile.joinedSuffix')}`
+                : t('profile.joined')}
             </Text>
             <TouchableOpacity
               onPress={() => router.navigate('/EditProfile' as any)}

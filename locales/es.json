@@ -33,6 +33,8 @@
   "profile": {
     "traveler": "Viajero #1",
     "joined": "Se unió hace # días",
+    "joinedPrefix": "Se unió hace",
+    "joinedSuffix": "días",
     "editProfile": "Editar perfil",
     "unlockedBadges": "Insignias desbloqueadas",
     "seeAll": "Ver Todas",

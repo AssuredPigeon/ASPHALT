@@ -1,3 +1,4 @@
+import { useAuth } from '@/context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -10,17 +11,18 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'; // margenes 
 import { useTheme } from '../theme';
 
 export default function EditProfileScreen() {
+  const { user } = useAuth();
   const router = useRouter()
   const { theme } = useTheme()
   const { colors, typography, spacing, borderRadius } = theme
   const insets = useSafeAreaInsets()
   const { t } = useTranslation()
 
-  const [email, setEmail]                     = useState('')
-  const [newPassword, setNewPassword]         = useState('')
+  const [email, setEmail] = useState(user?.email ?? '')
+  const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [showPass, setShowPass]               = useState(false)
-  const [showConfirm, setShowConfirm]         = useState(false)
+  const [showPass, setShowPass] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
 
   const passwordMismatch =
     confirmPassword !== '' && confirmPassword !== newPassword
@@ -30,7 +32,7 @@ export default function EditProfileScreen() {
       backgroundColor: colors.background,
       paddingTop: insets.top,
     }]}>
-      <ScrollView 
+      <ScrollView
         showsVerticalScrollIndicator={false} // se oculta
         keyboardShouldPersistTaps="handled" // como afectan los taps con el teclado
         contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}
@@ -109,7 +111,7 @@ export default function EditProfileScreen() {
                 fontSize: typography.fontSize.md,
                 flex: 1,
               }}>
-                usuario1234
+                {user?.nombre ?? 'usuario1234'}
               </Text>
               <View style={[styles.autoTag, { backgroundColor: colors.primaryMuted }]}>
                 <Text style={{
