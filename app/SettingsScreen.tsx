@@ -2,12 +2,12 @@ import type { AppTheme } from '@/theme';
 import { useTheme } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import SettingRow from '@/components/ui/SettingRow';
 import SettingsSection from '@/components/ui/SettingsSection';
+import { useAppSettings } from './AppSettingsContext';
 import { useMapSettings } from './MapSettingsContext';
 
 export default function SettingsScreen() {
@@ -18,10 +18,24 @@ export default function SettingsScreen() {
   // mapView viene del contexto compartido para que AsphaltMap reaccione al cambio
   const { mapView, setMapView } = useMapSettings();
 
-  const [units,       setUnits]       = useState<'mi' | 'km'>('mi');
-  const [autoFocus,   setAutoFocus]   = useState(true);
-  const [voiceVolume, setVoiceVolume] = useState(0.7);
-  const [muteCalls,   setMuteCalls]   = useState(true);
+  // el resto de settings vienen del contexto unificado, persisten en AsyncStorage
+  const {
+    units,
+    autoFocus,
+    voiceVolume,
+    muteCalls,
+    setSetting,
+    isLoaded,
+  } = useAppSettings();
+
+  // loader mínimo mientras AsyncStorage hidrata
+  if (!isLoaded) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <ActivityIndicator color={theme.colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -55,7 +69,7 @@ export default function SettingsScreen() {
               { label: t('settings.km'),   value: 'km' },
             ]}
             selected={units}
-            onSelect={setUnits}
+            onSelect={(v) => setSetting('units', v as 'mi' | 'km')}
           />
           <View style={styles.rowDivider} />
           <Pressable onPress={() => router.push('/LanguageScreen' as any)}>
@@ -82,10 +96,12 @@ export default function SettingsScreen() {
             label={t('settings.autoFocus')}
             type="switch"
             value={autoFocus}
-            onValueChange={setAutoFocus}
+            onValueChange={(v) => setSetting('autoFocus', v)}
           />
           <View style={styles.rowDivider} />
-          <SettingRow label={t('settings.vehicleIcon')} type="arrow" />
+          <Pressable onPress={() => router.push('/VehicleIconScreen' as any)}>
+            <SettingRow label={t('settings.vehicleIcon')} type="arrow" />
+          </Pressable>
         </SettingsSection>
 
         <SettingsSection title={t('settings.voice')}>
@@ -93,16 +109,18 @@ export default function SettingsScreen() {
             label={t('settings.voiceVolume')}
             type="slider"
             value={voiceVolume}
-            onValueChange={setVoiceVolume}
+            onValueChange={(v) => setSetting('voiceVolume', v)}
           />
           <View style={styles.rowDivider} />
-          <SettingRow label={t('settings.currentVoice')} type="arrow" />
+          <Pressable onPress={() => router.push('/VoiceScreen' as any)}>
+            <SettingRow label={t('settings.currentVoice')} type="arrow" />
+          </Pressable>
           <View style={styles.rowDivider} />
           <SettingRow
             label={t('settings.muteCalls')}
             type="switch"
             value={muteCalls}
-            onValueChange={setMuteCalls}
+            onValueChange={(v) => setSetting('muteCalls', v)}
           />
         </SettingsSection>
 
@@ -118,6 +136,10 @@ const makeStyles = (theme: AppTheme) =>
       backgroundColor:   theme.colors.background,
       paddingTop:        60,
       paddingHorizontal: theme.spacing.screenH,
+    },
+    centered: {
+      justifyContent: 'center',
+      alignItems:     'center',
     },
     header: {
       flexDirection:  'row',

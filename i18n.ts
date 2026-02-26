@@ -10,7 +10,7 @@ const initI18n = async () => {
   // Lee el idioma guardado por el usuario
   const savedLang = await AsyncStorage.getItem('appLanguage');
   // Si no, detecta el idioma
-  const deviceLang = Localization.getLocales()[0]?.languageTag.startsWith('en') ? 'en' : 'es';
+  const deviceLang = Localization.getLocales()[0]?.languageTag.startsWith('es') ? 'es' : 'en';
 
   await i18n.use(initReactI18next).init({
     resources: {

@@ -203,5 +203,17 @@
   },
   "socialAuth": {
     "label": "Or continue with"
+  },
+  "driving": {
+    "initButton": "Start Driving Mode",
+    "sensorsTitle": "Sensors",
+    "drivingBadge": "Driving",
+    "stop": "Stop",
+    "calculating": "Calculating...",
+    "destinationTitle": "Select your destination:",
+    "destinationPlaceholder": "Search destination...",
+    "startButton": "Start",
+    "defaultDestination": "Destination",
+    "howToGet": "Directions"
   }
 }
