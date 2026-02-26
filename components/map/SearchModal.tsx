@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+
 import {
   ActivityIndicator,
   FlatList,
@@ -23,6 +24,8 @@ type Props = {
   visible:          boolean;
   onClose:          () => void;
   onSelectLocation: (lat: number, lon: number, name: string) => void;
+  // Callback para iniciar navegación desde un resultado (muestra la SelectedPlaceCard)
+  onNavigateTo?:    (lat: number, lon: number, name: string) => void;
   location?:        Location.LocationObject | null;
 };
 
@@ -43,7 +46,13 @@ type SearchResult = {
   category?:     string;
 };
 
-export default function SearchModal({ visible, onClose, onSelectLocation, location }: Props) {
+export default function SearchModal({
+  visible,
+  onClose,
+  onSelectLocation,
+  onNavigateTo,
+  location,
+}: Props) {
   const { theme } = useTheme();
   const styles    = makeStyles(theme);
   const { t }     = useTranslation();
@@ -112,6 +121,30 @@ export default function SearchModal({ visible, onClose, onSelectLocation, locati
     onClose();
   };
 
+  // Manejar "Cómo llegar" — cierra el modal y muestra la SelectedPlaceCard en el mapa
+  const handleNavigateTo = (item: SearchResult) => {
+    const name = item.display_name ?? item.name ?? 'Ubicación';
+
+    // Guardar en recientes
+    if (!item.category) {
+      saveSearch({
+        name,
+        lat: Number(item.lat),
+        lon: Number(item.lon),
+      });
+    }
+
+    // Centrar mapa en el destino
+    onSelectLocation(Number(item.lat), Number(item.lon), name);
+
+    // Notificar al padre para mostrar la SelectedPlaceCard
+    onNavigateTo?.(Number(item.lat), Number(item.lon), name);
+
+    setQuery('');
+    setResults([]);
+    onClose();
+  };
+
   return (
     <Modal visible={visible} animationType="slide" transparent>
       <View style={styles.overlay}>
@@ -154,33 +187,50 @@ export default function SearchModal({ visible, onClose, onSelectLocation, locati
             }
             keyExtractor={(item, index) => item.place_id ?? (item.name ?? '') + index}
             renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.resultItem}
-                onPress={() => handleSelect(item)}
-                activeOpacity={0.7}
-              >
-                <View style={styles.resultIcon}>
-                  <Ionicons
-                    name={item.category ? (CATEGORY_ICONS[item.category] ?? 'location-outline') : 'time-outline'}
-                    size={18}
-                    color={theme.colors.textSecondary}
-                  />
-                </View>
-                <Text style={styles.resultText} numberOfLines={1}>
-                  {item.display_name ?? item.name ?? 'Sin nombre'}
-                </Text>
+              <View style={styles.resultRow}>
+                <TouchableOpacity
+                  style={styles.resultItem}
+                  onPress={() => handleSelect(item)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.resultIcon}>
+                    <Ionicons
+                      name={item.category ? (CATEGORY_ICONS[item.category] ?? 'location-outline') : 'time-outline'}
+                      size={18}
+                      color={theme.colors.textSecondary}
+                    />
+                  </View>
+                  <Text style={styles.resultText} numberOfLines={1}>
+                    {item.display_name ?? item.name ?? 'Sin nombre'}
+                  </Text>
+                </TouchableOpacity>
 
-                {/* Botón eliminar (solo visible en recientes) */}
-                {query.length === 0 && (
-                  <Pressable
-                    onPress={() => removeSearch(item.name ?? '')}
-                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                    style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1 })}
-                  >
-                    <Ionicons name="close" size={16} color={theme.colors.textSecondary} />
-                  </Pressable>
-                )}
-              </TouchableOpacity>
+                {/* Fila derecha: "Cómo llegar" (solo en resultados de búsqueda) + cerrar (solo en recientes) */}
+                <View style={styles.resultActions}>
+                  {/* Botón "Cómo llegar" — visible en resultados de búsqueda y recientes */}
+                  {onNavigateTo && (
+                    <TouchableOpacity
+                      style={styles.navBtn}
+                      onPress={() => handleNavigateTo(item)}
+                      activeOpacity={0.75}
+                    >
+                      <Ionicons name="navigate-outline" size={13} color={theme.colors.primary} />
+                      <Text style={styles.navBtnText}>{t('driving.howToGet')}</Text>
+                    </TouchableOpacity>
+                  )}
+
+                  {/* Botón eliminar (solo visible en recientes) */}
+                  {query.length === 0 && (
+                    <Pressable
+                      onPress={() => removeSearch(item.name ?? '')}
+                      hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                      style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1 })}
+                    >
+                      <Ionicons name="close" size={16} color={theme.colors.textSecondary} />
+                    </Pressable>
+                  )}
+                </View>
+              </View>
             )}
             ListHeaderComponent={
               query.length === 0 ? (
@@ -280,12 +330,25 @@ const makeStyles = (theme: AppTheme) =>
       marginLeft:      theme.spacing.sm,
       paddingVertical: theme.spacing[2.5],
     },
-    resultItem: {
+
+    // Fila de resultado: texto + acciones 
+    resultRow: {
       flexDirection:     'row',
       alignItems:        'center',
-      paddingVertical:   theme.spacing[3],
       borderBottomWidth: 0.5,
       borderBottomColor: theme.colors.divider,
+    },
+    resultItem: {
+      flex:            1,
+      flexDirection:   'row',
+      alignItems:      'center',
+      paddingVertical: theme.spacing[3],
+    },
+    resultActions: {
+      flexDirection: 'row',
+      alignItems:    'center',
+      gap:           theme.spacing[2],
+      paddingRight:  theme.spacing[1],
     },
     resultIcon: {
       width:           36,
@@ -301,6 +364,25 @@ const makeStyles = (theme: AppTheme) =>
       ...theme.typography.styles.caption,
       color: theme.colors.text,
     },
+
+    // Botón "Cómo llegar" inline en cada resultado
+    navBtn: {
+      flexDirection:     'row',
+      alignItems:        'center',
+      gap:               4,
+      backgroundColor:   theme.colors.primaryMuted,
+      borderRadius:      theme.borderRadius.full,
+      paddingVertical:   theme.spacing[1.5],
+      paddingHorizontal: theme.spacing[2.5],
+      borderWidth:       1,
+      borderColor:       theme.colors.primaryBorder,
+    },
+    navBtnText: {
+      fontSize:   11,
+      fontWeight: '600',
+      color:      theme.colors.primary,
+    },
+
     sectionHeader: {
       flexDirection:  'row',
       justifyContent: 'space-between',

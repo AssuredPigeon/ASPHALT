@@ -1,7 +1,7 @@
 import api from '@/services/api';
 import type { AppTheme } from '@/theme';
 import { useTheme } from '@/theme';
-import { MaterialIcons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { LocationObject } from 'expo-location';
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import {
@@ -13,9 +13,10 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
-import MapView, { Region } from 'react-native-maps';
+import MapView, { Polyline, Region } from 'react-native-maps';
 
-import { useMapSettings } from '../../app/MapSettingsContext';
+import { SoundMode, useDrivingMode } from '../../context/DrivingModeContext';
+import { useMapSettings } from '../../context/MapSettingsContext';
 import StreetQualityLayer, { CalleEstado } from './StreetQualityLayer';
 
 // Define la forma
@@ -25,7 +26,8 @@ export type AsphaltMapHandle = {
 
 // Tendrá esos parámetros
 interface Props {
-  location: LocationObject | null;
+  location:   LocationObject | null;
+  isDriving?: boolean;   // Cuando conduce, los botones laterales suben para no solapar el panel
 }
 
 // Función que devuelve arreglo con info de calles
@@ -43,11 +45,38 @@ async function fetchStreetsFromAPI(region: Region): Promise<CalleEstado[]> {
   return data.calles;  // Ya viene en el formato que espera StreetQualityLayer
 }
 
+// Obtiene la ruta real entre dos puntos usando OSRM (OpenStreetMap routing)
+// Devuelve array de coordenadas { latitude, longitude } para dibujar la Polyline
+async function fetchRoute(
+  fromLat: number, fromLon: number,
+  toLat:   number, toLon:   number
+): Promise<{ latitude: number; longitude: number }[]> {
+  const url =
+    `https://router.project-osrm.org/route/v1/driving/` +
+    `${fromLon},${fromLat};${toLon},${toLat}` +
+    `?overview=full&geometries=geojson`;
+
+  const res  = await fetch(url, { headers: { 'Accept': 'application/json' } });
+  const data = await res.json();
+
+  if (data.code !== 'Ok' || !data.routes?.[0]) return [];
+
+  // OSRM devuelve [lon, lat] — invertimos a { latitude, longitude }
+  return (data.routes[0].geometry.coordinates as [number, number][]).map(
+    ([lon, lat]) => ({ latitude: lat, longitude: lon })
+  );
+}
+
 // Tipo de capa activa del menú flotante
 // "none"    sin ninguna capa activada
 // "heatmap" muestra el mapa de calor de calidad vial
 // "3d"      inclina la cámara para mostrar edificios en perspectiva
 type LayerMode = 'none' | 'heatmap' | '3d';
+
+// Vista activa durante conducción
+// "close"  zoom cercano con pitch 3D
+// "route"  zoom lejano para ver toda la ruta
+type DriveView = 'close' | 'route';
 
 // Leyenda
 const LEYENDA = [
@@ -57,13 +86,26 @@ const LEYENDA = [
   { color: 'rgba(255, 90,  90,  0.95)', label: 'Crítico (0–25)' },
 ];
 
+// Iconos y colores del modo de sonido — igual que imagen 1
+const SOUND_CONFIG: Record<SoundMode, { icon: string; color: string }> = {
+  narration: { icon: 'volume-high',   color: '#4C8DFF' },  // Azul — narración completa
+  alerts:    { icon: 'volume-medium', color: '#F59E0B' },  // Amarillo — solo alertas
+  mute:      { icon: 'volume-mute',   color: '#EF4444' },  // Rojo — silencio
+};
+
+// Ciclo del botón de sonido: narración -> alertas -> silencio -> narración
+const SOUND_CYCLE: SoundMode[] = ['narration', 'alerts', 'mute'];
+
 // Componente que recibe un prop y se controla mediante ref
-const AsphaltMap = forwardRef<AsphaltMapHandle, Props>(({ location }, ref) => {
+const AsphaltMap = forwardRef<AsphaltMapHandle, Props>(({ location, isDriving = false }, ref) => {
   const { theme, isDark } = useTheme();
-  const styles = makeStyles(theme, isDark);
+  const styles = makeStyles(theme, isDark, isDriving);
 
   // Lee la preferencia de vista del contexto compartido con Settings
   const { mapView, setMapView } = useMapSettings();
+
+  // Lee el estado de audio y el destino desde el contexto de conducción
+  const { soundMode, setSoundMode, destination } = useDrivingMode();
 
   const mapRef = useRef<MapView>(null); // Guarda ref y es null de momento
   const lastLocationRef = useRef<LocationObject | null>(null); // Guarda la última locación conocida y es null de momento
@@ -77,9 +119,89 @@ const AsphaltMap = forwardRef<AsphaltMapHandle, Props>(({ location }, ref) => {
   const [calles, setCalles] = useState<CalleEstado[]>([]); // Calles que se mostrarán
   const [loading, setLoading] = useState(false); // UI de carga
 
+  // Coordenadas de la ruta calculada por OSRM — se dibuja como Polyline sobre el mapa
+  const [routeCoords, setRouteCoords] = useState<{ latitude: number; longitude: number }[]>([]);
+
+  // Vista activa durante conducción: 'close' (3D cerca) o 'route' (todo el trayecto)
+  const [driveView, setDriveView] = useState<DriveView>('close');
+
   // Derivados para hacer el JSX más legible
   const heatmapVisible = activeLayer === 'heatmap';
   const is3D = activeLayer === '3d';
+
+  // Ruta: calcular cuando inicia la conducción o cambia el destino 
+  useEffect(() => {
+    if (!isDriving || !location || !destination) {
+      setRouteCoords([]); // Limpiar ruta al salir del modo conducción
+      return;
+    }
+
+    fetchRoute(
+      location.coords.latitude,
+      location.coords.longitude,
+      destination.lat,
+      destination.lon
+    )
+      .then(coords => setRouteCoords(coords))
+      .catch(() => setRouteCoords([]));
+  }, [isDriving, destination]); // Solo recalcula al cambiar destino, no en cada posición GPS
+
+  // Vista cercana en conducción: pitch 75 + zoom urbano 
+  const enterCloseView = () => {
+    setDriveView('close');
+    setFollowUser(true);
+    if (!location) return;
+    mapRef.current?.animateCamera(
+      {
+        center:   { latitude: location.coords.latitude, longitude: location.coords.longitude },
+        pitch:    75,
+        altitude: 350,
+        zoom:     18,
+      },
+      { duration: 800 }
+    );
+  };
+
+  // Vista lejana en conducción: encuadra toda la ruta 
+  const enterRouteView = () => {
+    setDriveView('route');
+    setFollowUser(false);
+    if (!location || !destination) return;
+
+    // Calcular el centro entre posición actual y destino
+    const midLat = (location.coords.latitude  + destination.lat) / 2;
+    const midLon = (location.coords.longitude + destination.lon) / 2;
+
+    // Delta para ver ambos puntos con margen
+    const deltaLat = Math.abs(location.coords.latitude  - destination.lat) * 1.5;
+    const deltaLon = Math.abs(location.coords.longitude - destination.lon) * 1.5;
+
+    mapRef.current?.animateToRegion(
+      {
+        latitude:      midLat,
+        longitude:     midLon,
+        latitudeDelta:  Math.max(deltaLat, 0.05),
+        longitudeDelta: Math.max(deltaLon, 0.05),
+      },
+      900
+    );
+    mapRef.current?.animateCamera({ pitch: 0 }, { duration: 600 });
+  };
+
+  // Al entrar al modo conducción, activar la vista cercana por defecto
+  useEffect(() => {
+    if (isDriving) {
+      // Pequeño delay para que el mapa esté listo antes de animar
+      setTimeout(() => enterCloseView(), 400);
+    }
+  }, [isDriving]);
+
+  // Ciclar al siguiente modo de sonido
+  const cycleSound = () => {
+    const currentIdx = SOUND_CYCLE.indexOf(soundMode);
+    const nextIdx    = (currentIdx + 1) % SOUND_CYCLE.length;
+    setSoundMode(SOUND_CYCLE[nextIdx]);
+  };
 
   // Reacciona al cambio de mapView desde Settings.
   useEffect(() => {
@@ -276,6 +398,28 @@ const AsphaltMap = forwardRef<AsphaltMapHandle, Props>(({ location }, ref) => {
         onRegionChangeComplete={handleRegionChange}
       >
         <StreetQualityLayer calles={calles} visible={heatmapVisible} />
+
+        {/* Ruta iluminada — solo visible durante el modo conducción */}
+        {isDriving && routeCoords.length > 1 && (
+          <>
+            {/* Sombra exterior de la ruta para mayor contraste */}
+            <Polyline
+              coordinates={routeCoords}
+              strokeColor="rgba(0,0,0,0.25)"
+              strokeWidth={10}
+              lineJoin="round"
+              lineCap="round"
+            />
+            {/* Línea principal azul brillante */}
+            <Polyline
+              coordinates={routeCoords}
+              strokeColor="#2E8FFF"
+              strokeWidth={7}
+              lineJoin="round"
+              lineCap="round"
+            />
+          </>
+        )}
       </MapView>
 
       {/* Capa transparente que cierra el menú al tocar fuera de él */}
@@ -304,6 +448,61 @@ const AsphaltMap = forwardRef<AsphaltMapHandle, Props>(({ location }, ref) => {
           color={followUser ? theme.colors.primary : theme.colors.textSecondary}
         />
       </Pressable>
+
+      {/* Botones exclusivos del modo conducción: vista + sonido en pill vertical */}
+      {isDriving && (
+        <View style={styles.drivingPill}>
+
+          {/* Vista cercana 3D */}
+          <Pressable
+            onPress={enterCloseView}
+            style={({ pressed }) => [
+              styles.pillBtn,
+              driveView === 'close' && styles.pillBtnActive,
+              pressed && styles.pillBtnPressed,
+            ]}
+          >
+            <Ionicons
+              name="navigate"
+              size={22}
+              color={driveView === 'close' ? theme.colors.primary : theme.colors.textSecondary}
+            />
+          </Pressable>
+
+          <View style={styles.pillDivider} />
+
+          {/* Vista lejana — toda la ruta */}
+          <Pressable
+            onPress={enterRouteView}
+            style={({ pressed }) => [
+              styles.pillBtn,
+              driveView === 'route' && styles.pillBtnActive,
+              pressed && styles.pillBtnPressed,
+            ]}
+          >
+            <Ionicons
+              name="map-outline"
+              size={22}
+              color={driveView === 'route' ? theme.colors.primary : theme.colors.textSecondary}
+            />
+          </Pressable>
+
+          <View style={styles.pillDivider} />
+
+          {/* Botón de audio — cicla entre narración, alertas y silencio */}
+          <Pressable
+            onPress={cycleSound}
+            style={({ pressed }) => [styles.pillBtn, pressed && styles.pillBtnPressed]}
+          >
+            <Ionicons
+              name={SOUND_CONFIG[soundMode].icon as any}
+              size={22}
+              color={SOUND_CONFIG[soundMode].color}
+            />
+          </Pressable>
+
+        </View>
+      )}
 
       {/* Menú flotante de capas, aparece a la izquierda del botón layers */}
       {menuOpen && (
@@ -360,21 +559,21 @@ const AsphaltMap = forwardRef<AsphaltMapHandle, Props>(({ location }, ref) => {
         </View>
       )}
 
-      {/* Botón layers: abre el menú de capas. Se ilumina si hay alguna capa activa */}
+      {/* Botón layers: siempre visible — el heatmap también es útil durante la conducción */}
       <Pressable
-        onPress={() => setMenuOpen(p => !p)}
-        style={({ pressed }) => [
-          styles.heatmapButton,
-          (menuOpen || activeLayer !== 'none') && styles.heatmapButtonActive,
-          pressed && styles.heatmapButtonPressed,
-        ]}
-      >
-        <MaterialIcons
-          name="layers"
-          size={24}
-          color={(menuOpen || activeLayer !== 'none') ? theme.colors.primary : theme.colors.textSecondary}
-        />
-      </Pressable>
+          onPress={() => setMenuOpen(p => !p)}
+          style={({ pressed }) => [
+            styles.heatmapButton,
+            (menuOpen || activeLayer !== 'none') && styles.heatmapButtonActive,
+            pressed && styles.heatmapButtonPressed,
+          ]}
+        >
+          <MaterialIcons
+            name="layers"
+            size={24}
+            color={(menuOpen || activeLayer !== 'none') ? theme.colors.primary : theme.colors.textSecondary}
+          />
+        </Pressable>
 
       {/* Leyenda de colores, visible solo cuando el heatmap está activo */}
       {heatmapVisible && (
@@ -390,7 +589,7 @@ const AsphaltMap = forwardRef<AsphaltMapHandle, Props>(({ location }, ref) => {
       )}
 
       {/* Badge que indica que el mapa está en 3D, ya sea por el menú o por Settings */}
-      {mapIs3D && (
+      {mapIs3D && !isDriving && (
         <View style={styles.badge3D}>
           <Text style={styles.badge3DText}>3D</Text>
         </View>
@@ -402,8 +601,9 @@ const AsphaltMap = forwardRef<AsphaltMapHandle, Props>(({ location }, ref) => {
 export default AsphaltMap;
 
 // Estilos
-const makeStyles = (theme: AppTheme, isDark: boolean) => {
-  const panel = isDark ? 'rgba(26,39,68,0.96)' : 'rgba(255,255,255,0.97)';
+const makeStyles = (theme: AppTheme, isDark: boolean, isDriving: boolean = false) => {
+  const panel    = isDark ? 'rgba(26,39,68,0.96)' : 'rgba(255,255,255,0.97)';
+  const pillBg   = isDark ? 'rgba(15,22,45,0.92)' : 'rgba(255,255,255,0.95)';
 
   return StyleSheet.create({
     gpsButton: {
@@ -509,6 +709,37 @@ const makeStyles = (theme: AppTheme, isDark: boolean) => {
       fontWeight: '700',
       color: theme.colors.primary,
       letterSpacing: 1,
+    },
+
+    // ── Pill vertical con botones exclusivos del modo conducción ──
+    // Posicionada a la derecha, sobre los botones GPS/layers
+    drivingPill: {
+      position:        'absolute',
+      right:           theme.spacing.screenH,
+      bottom:          390,   // Encima del botón layers (318) y GPS (250) sin solaparse
+      backgroundColor: pillBg,
+      borderRadius:    theme.borderRadius.full,
+      borderWidth:     1,
+      borderColor:     theme.colors.border,
+      overflow:        'hidden',
+      ...theme.shadows.xl,
+    },
+    pillBtn: {
+      width:          50,
+      height:         50,
+      alignItems:     'center',
+      justifyContent: 'center',
+    },
+    pillBtnActive: {
+      backgroundColor: theme.colors.primaryMuted,
+    },
+    pillBtnPressed: {
+      opacity: 0.6,
+    },
+    pillDivider: {
+      height:          1,
+      backgroundColor: theme.colors.border,
+      marginHorizontal: theme.spacing[2],
     },
   });
 };

@@ -14,7 +14,7 @@ import {
   View,
 } from 'react-native';
 
-import { useAppSettings } from './AppSettingsContext';
+import { useAppSettings } from '../context/AppSettingsContext';
 
 // texto de muestra que se reproduce al tocar preview
 const PREVIEW_TEXT = 'Turn left in 300 meters onto Main Street.';
@@ -36,7 +36,7 @@ export default function VoiceScreen() {
     Speech.getAvailableVoicesAsync()
       .then((v) => {
         const filtered = v
-          .filter((voice) => voice.language.startsWith('en'))
+          .filter((voice) => voice.language.startsWith('es'))
           .sort((a, b) => a.name.localeCompare(b.name));
         setVoices(filtered);
       })

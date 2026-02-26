@@ -203,5 +203,17 @@
   },
   "socialAuth": {
     "label": "O continúa con"
+  },
+  "driving": {
+    "initButton": "Iniciar Modo Conducción",
+    "sensorsTitle": "Sensores",
+    "drivingBadge": "Conduciendo",
+    "stop": "Detener",
+    "calculating": "Calculando...",
+    "destinationTitle": "Selecciona tu destino:",
+    "destinationPlaceholder": "Buscar destino...",
+    "startButton": "Comenzar",
+    "defaultDestination": "Destino",
+    "howToGet": "Cómo llegar"
   }
 }
